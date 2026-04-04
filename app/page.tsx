@@ -763,7 +763,7 @@ export default function DashboardPage() {
                       {/* Missed Part */}
                       <div 
                         style={{ height: `${missedPct}%` }}
-                        className="w-full bg-on-surface/5 rounded-t-sm transition-all duration-500"
+                        className="w-full bg-error/30 rounded-t-sm transition-all duration-500"
                       ></div>
                     </div>
                   </div>
@@ -784,7 +784,7 @@ export default function DashboardPage() {
               <div className="bg-surface-container/50 p-3 rounded-2xl border border-on-surface/5 text-right">
                 <div className="flex items-center gap-2 mb-1 justify-end">
                   <span className="text-[8px] font-black text-on-surface-variant uppercase tracking-widest">Chưa đạt</span>
-                  <div className="w-2 h-2 rounded-full bg-on-surface/10"></div>
+                  <div className="w-2 h-2 rounded-full bg-error/40"></div>
                 </div>
                 <p className="text-sm font-headline font-black text-on-surface-variant">
                   {entries.reduce((sum, e) => {

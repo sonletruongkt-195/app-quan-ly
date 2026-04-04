@@ -290,7 +290,7 @@ export default function StatsPage() {
                     <div className="w-full relative flex flex-col-reverse items-center h-full max-w-[4px] bg-surface-container-highest/20 rounded-full overflow-hidden border border-on-surface/5">
                       {/* Remainder Segment */}
                       <div 
-                        className="w-full bg-on-surface/10 transition-all duration-700" 
+                        className="w-full bg-error/30 transition-all duration-700" 
                         style={{ height: `${remHeight}%` }}
                       ></div>
                       {/* Done Segment */}
@@ -312,7 +312,7 @@ export default function StatsPage() {
               <span className="text-[8px] font-bold text-on-surface-variant/80 uppercase">Đã hoàn thành</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-sm bg-on-surface/20"></div>
+              <div className="w-2.5 h-2.5 rounded-sm bg-error/40"></div>
               <span className="text-[8px] font-bold text-on-surface-variant/80 uppercase">Chưa hoàn thành</span>
             </div>
           </div>
