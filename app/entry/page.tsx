@@ -393,8 +393,14 @@ export default function EntryPage() {
               Goals: <span className={currentStatus?.goalPercent! >= 50 ? 'text-primary' : 'text-error'}>{Math.round(currentStatus?.goalPercent || 0)}%</span>
               </p>
             </div>
-            <div className={`px-4 py-2 rounded-2xl font-black text-xs shadow-sm ${currentStatus?.isWin ? 'bg-primary text-on-primary' : 'bg-error text-on-error'}`}>
-              {currentStatus?.isWin ? 'WINNING 🏆' : 'LOSING 💩'}
+            <div className={`px-4 py-2 rounded-2xl font-black text-xs shadow-sm ${
+              !(todayEntry?.wateredToday) && normalDone === 0 && hardDone === 0 && revenueTotal === 0
+                ? 'bg-primary-container text-primary'
+                : currentStatus?.isWin ? 'bg-primary text-on-primary' : 'bg-error text-on-error'
+            }`}>
+              {!(todayEntry?.wateredToday) && normalDone === 0 && hardDone === 0 && revenueTotal === 0
+                ? 'SẴN SÀNG 🌿' 
+                : currentStatus?.isWin ? 'WINNING 🏆' : 'LOSING 💩'}
             </div>
           </div>
         </section>
@@ -412,7 +418,15 @@ export default function EntryPage() {
           {submitting ? (
             <span className="material-symbols-outlined animate-spin">sync</span>
           ) : (
-            <><span className="material-symbols-outlined font-black">verified</span> {isSubmitted ? 'CẬP NHẬT KẾT QUẢ' : (currentStatus?.isWin ? 'CHỐT NGÀY THẮNG LỢI' : 'CHỐT NGÀY THẤT BẠI')}</>
+            <>
+              <span className="material-symbols-outlined font-black">verified</span> 
+              {isSubmitted 
+                ? 'CẬP NHẬT KẾT QUẢ' 
+                : (!(todayEntry?.wateredToday) && normalDone === 0 && hardDone === 0 && revenueTotal === 0)
+                  ? 'GHI NHẬN NGÀY MỚI'
+                  : (currentStatus?.isWin ? 'CHỐT NGÀY THẮNG LỢI' : 'CHỐT NGÀY THẤT BẠI')
+              }
+            </>
           )}
         </button>
       </div>
