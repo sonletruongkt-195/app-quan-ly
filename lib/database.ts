@@ -67,7 +67,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     .from('profiles')
     .select('*')
     .eq('id', uid)
-    .single();
+    .maybeSingle();
 
   if (error || !data) return null;
   
@@ -146,7 +146,7 @@ export async function getDailyEntry(uid: string, date: string): Promise<DailyEnt
     .select('*')
     .eq('profile_id', uid)
     .eq('date', date)
-    .single();
+    .maybeSingle();
 
   if (error || !data) return null;
   return entryFromDB(data);
