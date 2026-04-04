@@ -54,7 +54,7 @@ const BADGES: Badge[] = [
 ];
 
 export default function AwardsPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, logout } = useAuth();
   const router = useRouter();
   const [entries, setEntries] = useState<any[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -237,6 +237,18 @@ export default function AwardsPage() {
           </div>
           <span className="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform relative z-10 font-black">arrow_forward_ios</span>
         </Link>
+        
+        {/* Logout Button */}
+        <button 
+          onClick={async () => {
+            await logout();
+            router.replace('/login');
+          }}
+          className="w-full flex items-center justify-center gap-3 bg-error/5 text-error font-black py-5 px-8 rounded-[32px] border border-error/10 mt-12 mb-8 active:scale-95 transition-all group"
+        >
+          <span className="material-symbols-outlined font-black group-hover:rotate-180 transition-transform duration-500">logout</span>
+          Đăng xuất khỏi Greenhouse
+        </button>
       </main>
 
       <BottomNav active="/awards" />
