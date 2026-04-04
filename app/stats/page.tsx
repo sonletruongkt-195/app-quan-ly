@@ -43,6 +43,7 @@ export default function StatsPage() {
   
   // 3. Total Tasks Completed
   const totalTasksDone = submittedEntries.reduce((sum, e) => sum + (e.normalTasksDone + e.hardTasksDone), 0);
+  const totalTasksTarget = submittedEntries.reduce((sum, e) => sum + (e.normalTasksTotal + e.hardTasksTotal), 0);
   
   // 4. Watering Success/Fail
   const wateringSuccess = entries.filter(e => e.wateredToday).length;
@@ -85,7 +86,7 @@ export default function StatsPage() {
           {[
             { label: 'Tổng điểm', value: `${totalPointsReal.toFixed(1)}đ`, icon: 'star', color: 'text-tertiary', bg: 'bg-tertiary-container/30' },
             { label: 'Doanh thu (M)', value: `${cumulativeRevenue.toFixed(1)}M`, icon: 'payments', color: 'text-primary', bg: 'bg-primary-container/40' },
-            { label: 'Task đã xong', value: totalTasksDone, icon: 'task_alt', color: 'text-secondary', bg: 'bg-secondary-container/20' },
+            { label: 'Task đã xong', value: `${totalTasksDone} / ${totalTasksTarget}`, icon: 'task_alt', color: 'text-secondary', bg: 'bg-secondary-container/20' },
             { label: 'Tưới cây (✅/❌)', value: `${wateringSuccess} / ${wateringMissed}`, icon: 'water_drop', color: 'text-[#0288D1]', bg: 'bg-[#0288D1]/10' },
           ].map((s, i) => (
             <div key={i} className="bg-surface-container-lowest p-3 rounded-[24px] shadow-sm border border-on-surface/5 flex flex-col items-center justify-center text-center group active:scale-95 transition-transform">
