@@ -78,6 +78,11 @@ export interface DailyEntry {
   taskPercent: number;
   revenuePercent: number;
   isWin: boolean;
+
+  // Challenges
+  challengeId: number | null; // 1: Double Normal, 2: Double Hard, 3: Double Both
+  challengeStatus: 'none' | 'seen' | 'accepted' | 'rejected';
+  challengeBonus: number;
 }
 
 export const DEFAULT_PROFILE: Omit<UserProfile, 'uid' | 'displayName' | 'email' | 'photoURL' | 'createdAt' | 'updatedAt'> = {
@@ -118,6 +123,9 @@ export const DEFAULT_DAILY_ENTRY: Omit<DailyEntry, 'date'> = {
   taskPercent: 0,
   revenuePercent: 0,
   isWin: false,
+  challengeId: null,
+  challengeStatus: 'none',
+  challengeBonus: 0,
 };
 
 export type PlantStage = 'dead' | 'seedling' | 'blooming' | 'fruiting';

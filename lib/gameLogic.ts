@@ -204,7 +204,8 @@ export function calculateDayScore(
   hardTasksTotal: number,
   revenueTotal: number,
   revenueTarget: number,
-  currentWinStreak: number
+  currentWinStreak: number,
+  challengeBonus: number = 0
 ): DayScoreResult {
   const wateringPts = wateredToday ? 1 : -2;
 
@@ -216,7 +217,7 @@ export function calculateDayScore(
   const taskPts = rawTaskPts * streakMultiplier;
   const revenuePts = rawRevenuePts * streakMultiplier;
 
-  const totalDayScore = wateringPts + taskPts + revenuePts;
+  const totalDayScore = wateringPts + taskPts + revenuePts + challengeBonus;
 
   const tasksDone = normalTasksDone + hardTasksDone;
   const totalTasks = (normalTasksTotal || 0) + (hardTasksTotal || 0);

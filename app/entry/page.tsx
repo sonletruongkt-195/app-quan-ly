@@ -65,7 +65,6 @@ export default function EntryPage() {
   const currentTarget = profile?.dailyRevenueTarget ?? 0;
   const revenuePercent = currentTarget > 0 ? (revenueTotal / currentTarget) * 100 : 0;
 
-  // Real-time score calculation
   const currentStatus = useMemo(() => {
     if (!profile) return null;
     return calculateDayScore(
@@ -76,7 +75,8 @@ export default function EntryPage() {
       hardTotal,
       revenueTotal,
       currentTarget,
-      profile.currentWinStreak
+      profile.currentWinStreak,
+      todayEntry?.challengeBonus || 0
     );
   }, [profile, todayEntry, normalDone, normalTotal, hardDone, hardTotal, revenueTotal, currentTarget]);
 
@@ -163,6 +163,7 @@ export default function EntryPage() {
 
   const isSubmitted = todayEntry?.submitted ?? false;
   const isGoalsLocked = normalTotal > 0 || hardTotal > 0;
+  const isChallenge = todayEntry?.challengeStatus === 'accepted';
   
   const today = new Date();
   const dateStr = today.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -202,9 +203,20 @@ export default function EntryPage() {
             <div className="w-8 h-8 rounded-xl bg-secondary-container/30 text-secondary flex items-center justify-center font-black text-sm border border-secondary/10 shadow-inner">1</div>
             <div>
               <p className="text-[7px] font-label text-on-surface-variant/50 uppercase tracking-[0.1em] font-black">Chăm chỉ</p>
-              <h2 className="text-sm font-headline font-black text-on-surface tracking-tight">Nhiệm vụ hàng ngày</h2>
+              <h2 className="text-sm font-headline font-black text-on-surface tracking-tight">
+                {isChallenge ? 'Thử thách: Bứt phá (+50 XP)' : 'Nhiệm vụ hàng ngày'}
+              </h2>
             </div>
           </div>
+          
+          {isChallenge && (
+            <div className="mb-4 p-3 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary text-xl font-black">bolt</span>
+              <p className="text-[10px] font-medium text-on-surface-variant leading-tight">
+                Bạn đã chấp nhận thử thách gấp đôi mục tiêu! Hoàn thành để nhận <span className="font-black text-primary">+50 XP bonus</span>.
+              </p>
+            </div>
+          )}
 
           {!isGoalsLocked ? (
             <div className="space-y-4 p-2 bg-surface-container/30 rounded-2xl border border-dashed border-on-surface/10">

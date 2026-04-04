@@ -54,6 +54,9 @@ function entryFromDB(dbData: any): DailyEntry {
     taskPercent: Number(dbData.task_percent),
     revenuePercent: Number(dbData.revenue_percent),
     isWin: dbData.is_win,
+    challengeId: dbData.challenge_id || null,
+    challengeStatus: dbData.challenge_status || 'none',
+    challengeBonus: dbData.challenge_bonus || 0,
   };
 }
 
@@ -179,6 +182,10 @@ export async function saveDailyEntry(
   if (data.taskPercent !== undefined) dbData.task_percent = data.taskPercent;
   if (data.revenuePercent !== undefined) dbData.revenue_percent = data.revenuePercent;
   if (data.isWin !== undefined) dbData.is_win = data.isWin;
+  
+  if (data.challengeId !== undefined) dbData.challenge_id = data.challengeId;
+  if (data.challengeStatus !== undefined) dbData.challenge_status = data.challengeStatus;
+  if (data.challengeBonus !== undefined) dbData.challenge_bonus = data.challengeBonus;
 
   const { error } = await supabase.from('daily_entries').upsert(dbData, { onConflict: 'profile_id, date' });
   if (error) throw error;
@@ -319,7 +326,8 @@ export async function submitDailyEntry(
     entry.hardTasksTotal || 0,
     revenueTotal,
     entry.revenueTarget,
-    baseStreak // Use base streak for calculation
+    baseStreak,
+    todayEntry?.challengeBonus || 0
   );
 
   const dayScore = { taskPercent, revenuePercent, totalDayScore, isWin, ...scores };
@@ -349,13 +357,14 @@ export async function submitDailyEntry(
     taskPercent: dayScore.taskPercent,
     revenuePercent: dayScore.revenuePercent,
     isWin: dayScore.isWin,
+    challengeBonus: todayEntry?.challengeBonus || 0,
   });
 
   // Update profile
   const profileUpdates: Partial<UserProfile> = {
     currentWinStreak: newStreak,
     longestWinStreak: newLongest,
-    totalGamePoints: Math.max(0, profile.totalGamePoints + submitPts),
+    totalGamePoints: Math.max(0, profile.totalGamePoints + submitPts + (todayEntry?.challengeBonus || 0)),
   };
 
   // 💎 Diamond Tracking

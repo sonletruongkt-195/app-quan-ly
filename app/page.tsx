@@ -10,10 +10,11 @@ import {
   getLastNDays, getStreakMultiplier, canRevivePlant, revivePlant, 
   getCalendarGrid, getMonthName 
 } from '@/lib/gameLogic';
-import { waterPlant, getRecentEntries, getEntriesByDateRange, updateUserProfile } from '@/lib/database';
+import { waterPlant, getRecentEntries, getEntriesByDateRange, updateUserProfile, saveDailyEntry } from '@/lib/database';
 import { DailyEntry } from '@/lib/types';
-import { playWatering, toggleZenBgm } from '@/lib/audio';
+import { playWatering, toggleZenBgm, playSuccess } from '@/lib/audio';
 import { usePathname } from 'next/navigation';
+import DailyChallengeModal from '@/components/DailyChallengeModal';
 
 // Premium Glassmorphism Gauge
 function CircularGauge({ percent, color, label, subLabel }: { percent: number; color: string; label: string; subLabel: string }) {
@@ -74,6 +75,9 @@ export default function DashboardPage() {
   const [viewDate, setViewDate] = useState(new Date());
   const [monthEntries, setMonthEntries] = useState<DailyEntry[]>([]);
   const [zenMode, setZenMode] = useState(false);
+  const [showChallenge, setShowChallenge] = useState(false);
+  const [challengeType, setChallengeType] = useState<number | null>(null);
+  const [baselineTasks, setBaselineTasks] = useState({ normal: 5, hard: 2 });
 
   useEffect(() => {
     toggleZenBgm(zenMode);
@@ -84,10 +88,35 @@ export default function DashboardPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) {
-      getRecentEntries(user.id, 31).then(setEntries);
+    if (user && profile) {
+      getRecentEntries(user.id, 31).then(data => {
+        setEntries(data);
+        
+        // Daily Challenge Logic: Only if not already seen today
+        if (todayEntry && todayEntry.challengeStatus === 'none' && !todayEntry.submitted) {
+          const hours = new Date().getHours();
+          const chance = Math.random() < 0.6; // 60% chance
+          if (chance) {
+             // Calculate baseline: average of last 7 entries with data
+             const recentWithTotal = data.filter(e => e.normalTasksTotal > 0).slice(0, 7);
+             const avgNormal = recentWithTotal.length > 0
+               ? Math.round(recentWithTotal.reduce((sum, e) => sum + e.normalTasksTotal, 0) / recentWithTotal.length)
+               : 5;
+             const avgHard = recentWithTotal.length > 0
+               ? Math.round(recentWithTotal.reduce((sum, e) => sum + e.hardTasksTotal, 0) / recentWithTotal.length)
+               : 2;
+             
+             setBaselineTasks({ normal: avgNormal, hard: avgHard });
+             setChallengeType(Math.floor(Math.random() * 3) + 1);
+             setShowChallenge(true);
+          } else {
+             // Mark as seen/rejected if roll fails to avoid nagging
+             saveDailyEntry(user.id, today, { challengeStatus: 'rejected' });
+          }
+        }
+      });
     }
-  }, [user, profile]);
+  }, [user, profile, todayEntry?.date]);
 
   useEffect(() => {
     if (user) {
@@ -128,6 +157,35 @@ export default function DashboardPage() {
     } finally {
       setWatering(false);
     }
+  };
+
+  const handleAcceptChallenge = async () => {
+    if (!user || !challengeType) return;
+    
+    const doubleNormal = challengeType === 1 || challengeType === 3 ? baselineTasks.normal * 2 : baselineTasks.normal;
+    const doubleHard = challengeType === 2 || challengeType === 3 ? baselineTasks.hard * 2 : baselineTasks.hard;
+
+    try {
+      await saveDailyEntry(user.id, today, {
+        challengeId: challengeType,
+        challengeStatus: 'accepted',
+        challengeBonus: 50,
+        normalTasksTotal: doubleNormal,
+        hardTasksTotal: doubleHard,
+      });
+      setShowChallenge(false);
+      playSuccess();
+      showToast(`🔥 Đã nhận thử thách! +50 XP khi hoàn thành!`);
+      await refreshTodayEntry();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeclineChallenge = async () => {
+    if (!user) return;
+    saveDailyEntry(user.id, today, { challengeStatus: 'rejected' });
+    setShowChallenge(false);
   };
 
   if (loading || !profile) {
@@ -199,6 +257,16 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {/* Daily Challenge Modal */}
+      <DailyChallengeModal 
+        isOpen={showChallenge}
+        type={challengeType || 1}
+        baseNormal={baselineTasks.normal}
+        baseHard={baselineTasks.hard}
+        onAccept={handleAcceptChallenge}
+        onDecline={handleDeclineChallenge}
+      />
 
       <main className="px-4 pt-1 space-y-4">
         {/* Hero Section: Digital Plant with Reacting Atmosphere */}
