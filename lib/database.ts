@@ -33,8 +33,10 @@ function entryFromDB(dbData: any): DailyEntry {
     ...dbData,
     wateredToday: dbData.watered_today,
     wateredAt: dbData.watered_at,
-    normalTasksDone: dbData.normal_tasks_done,
-    hardTasksDone: dbData.hard_tasks_done,
+    normalTasksDone: dbData.normal_tasks_done || 0,
+    normalTasksTotal: dbData.normal_tasks_total || 0,
+    hardTasksDone: dbData.hard_tasks_done || 0,
+    hardTasksTotal: dbData.hard_tasks_total || 0,
     revenue: {
       dienLanh: Number(dbData.revenue_dien_lanh),
       chay: Number(dbData.revenue_chay),
@@ -154,7 +156,9 @@ export async function saveDailyEntry(
   if (data.wateredToday !== undefined) dbData.watered_today = data.wateredToday;
   if (data.wateredAt !== undefined) dbData.watered_at = data.wateredAt;
   if (data.normalTasksDone !== undefined) dbData.normal_tasks_done = data.normalTasksDone;
+  if (data.normalTasksTotal !== undefined) dbData.normal_tasks_total = data.normalTasksTotal;
   if (data.hardTasksDone !== undefined) dbData.hard_tasks_done = data.hardTasksDone;
+  if (data.hardTasksTotal !== undefined) dbData.hard_tasks_total = data.hardTasksTotal;
   if (data.revenue !== undefined) {
     dbData.revenue_dien_lanh = data.revenue.dienLanh;
     dbData.revenue_chay = data.revenue.chay;
@@ -187,6 +191,19 @@ export async function getRecentEntries(uid: string, days: number = 7): Promise<D
 
   if (error || !data) return [];
   return data.map(entryFromDB).reverse();
+}
+
+export async function getEntriesByDateRange(uid: string, startDate: string, endDate: string): Promise<DailyEntry[]> {
+  const { data, error } = await supabase
+    .from('daily_entries')
+    .select('*')
+    .eq('profile_id', uid)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: true });
+
+  if (error || !data) return [];
+  return data.map(entryFromDB);
 }
 
 // ─── Water Plant ──────────────────────────────────────────────────────────────
@@ -259,26 +276,38 @@ export async function submitDailyEntry(
   profile: UserProfile,
   entry: {
     normalTasksDone: number;
+    normalTasksTotal: number;
     hardTasksDone: number;
+    hardTasksTotal: number;
     revenue: { dienLanh: number; chay: number; laiXe: number };
     revenueTarget: number;
     wateredToday: boolean;
-  }
+  },
+  todayEntry: DailyEntry | null // Added parameter
 ) : Promise<{ dayScore: ReturnType<typeof calculateDayScore>; updatedProfile: UserProfile }> {
   const today = getTodayStr();
   const revenueTotal = entry.revenue.dienLanh + entry.revenue.chay + entry.revenue.laiXe;
 
-  const dayScore = calculateDayScore(
+  // Calculate base streak (streak before today's results)
+  const baseStreak = todayEntry?.submitted 
+    ? (todayEntry.isWin ? Math.max(0, profile.currentWinStreak - 1) : profile.currentWinStreak)
+    : profile.currentWinStreak;
+
+  const { taskPercent, revenuePercent, totalDayScore, isWin, ...scores } = calculateDayScore(
     entry.wateredToday,
     entry.normalTasksDone,
+    entry.normalTasksTotal || 0,
     entry.hardTasksDone,
+    entry.hardTasksTotal || 0,
     revenueTotal,
     entry.revenueTarget,
-    profile.currentWinStreak
+    baseStreak // Use base streak for calculation
   );
 
-  // Update win streak
-  let newStreak = dayScore.isWin ? profile.currentWinStreak + 1 : 0;
+  const dayScore = { taskPercent, revenuePercent, totalDayScore, isWin, ...scores };
+
+  // Update win streak correctly based on the base streak
+  let newStreak = dayScore.isWin ? baseStreak + 1 : 0;
   const newLongest = Math.max(profile.longestWinStreak, newStreak);
 
   const submitPts = dayScore.taskPts + dayScore.revenuePts;
@@ -286,7 +315,9 @@ export async function submitDailyEntry(
   // Save entry
   await saveDailyEntry(uid, today, {
     normalTasksDone: entry.normalTasksDone,
+    normalTasksTotal: entry.normalTasksTotal || 0,
     hardTasksDone: entry.hardTasksDone,
+    hardTasksTotal: entry.hardTasksTotal || 0,
     revenue: entry.revenue,
     revenueTotal,
     revenueTarget: entry.revenueTarget,

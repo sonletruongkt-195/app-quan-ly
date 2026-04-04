@@ -55,21 +55,22 @@ export default function AwardsPage() {
 
   return (
     <div className="pb-32 bg-surface min-h-screen relative">
-      {/* Header */}
-      <header className="w-full top-0 sticky z-50 bg-gradient-to-b from-surface/90 to-surface/40 flex flex-col justify-end px-6 py-6 pb-4 backdrop-blur-md">
+      {/* Header with collection progress */}
+      <header className="w-full top-0 sticky z-50 bg-surface/80 backdrop-blur-xl px-6 py-6 border-b border-on-surface/5">
         <div className="flex justify-between items-end">
           <div>
-            <p className="text-primary font-label text-xs uppercase tracking-widest leading-none mb-1">Bộ sưu tập</p>
-            <h1 className="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Huy hiệu</h1>
+            <p className="text-tertiary font-label text-[10px] uppercase tracking-[0.3em] font-black mb-1">Collection</p>
+            <h1 className="text-3xl font-headline font-black text-on-surface tracking-tight">Huy hiệu</h1>
           </div>
-          <div className="text-right pb-1">
-            <div className="text-3xl font-headline font-extrabold text-tertiary-fixed-dim leading-none">
-              {unlocked.length}/{BADGES.length}
+          <div className="text-right">
+            <div className="text-3xl font-headline font-black text-tertiary tracking-tighter leading-none">
+              {unlocked.length}<span className="text-on-surface-variant/30 font-light mx-1">/</span>{BADGES.length}
             </div>
-            <div className="text-[10px] font-label text-on-surface-variant uppercase tracking-widest font-bold">đã mở khóa</div>
+            <div className="text-[10px] font-label text-on-surface-variant font-black uppercase tracking-widest mt-1">unlocked</div>
           </div>
         </div>
       </header>
+
 
       <main className="px-6 space-y-6 mt-4">
 
@@ -84,69 +85,75 @@ export default function AwardsPage() {
           </div>
         </section>
 
-        {/* Unlocked Badges */}
+        {/* Unlocked Badges: Premium card style */}
         {unlocked.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-primary text-lg">verified</span>
-              <h3 className="text-xs font-label text-on-surface-variant uppercase tracking-widest font-bold">Đã mở khóa ({unlocked.length})</h3>
+              <span className="material-symbols-outlined text-primary text-xl font-bold">workspace_premium</span>
+              <h3 className="text-[10px] font-label text-on-surface-variant uppercase tracking-[0.2em] font-black">Thành tích đã đạt</h3>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3.5">
               {unlocked.map(badge => (
-                <div key={badge.id} className="bg-surface-container-lowest border border-primary/20 shadow-sm p-4 rounded-2xl flex flex-col items-center text-center relative overflow-hidden group">
+                <div key={badge.id} className="bg-surface-container-lowest border border-on-surface/5 shadow-sm p-5 rounded-[32px] flex flex-col items-center text-center relative overflow-hidden group active:scale-95 transition-all">
                   <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="text-3xl mb-2">{badge.icon}</div>
-                  <div className="text-sm font-headline font-extrabold text-on-surface mb-1">{badge.name}</div>
-                  <div className="text-[10px] text-on-surface-variant mb-2">{badge.desc}</div>
-                  <div className="mt-auto px-2 py-0.5 rounded-full bg-primary-container text-primary text-[9px] font-label font-bold uppercase tracking-widest">MỚI</div>
+                  <div className="text-4xl mb-3 drop-shadow-md transform group-hover:scale-125 transition-transform duration-500">{badge.icon}</div>
+                  <div className="text-sm font-headline font-black text-on-surface mb-1 leading-tight">{badge.name}</div>
+                  <div className="text-[9px] text-on-surface-variant/80 font-bold leading-relaxed px-2">{badge.desc}</div>
+                  <div className="mt-4 px-3 py-1 rounded-full bg-primary-container/40 text-primary text-[8px] font-label font-black uppercase tracking-widest shadow-inner border border-primary/10">ACHIEVED</div>
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* Locked Badges */}
+
+        {/* Locked Badges: Sophisticated grayscale grid */}
         {locked.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-4 mt-8">
-              <span className="material-symbols-outlined text-on-surface-variant text-lg">lock</span>
-              <h3 className="text-xs font-label text-on-surface-variant uppercase tracking-widest">Chưa mở khóa ({locked.length})</h3>
+            <div className="flex items-center gap-2 mb-4 mt-10">
+              <span className="material-symbols-outlined text-on-surface-variant/40 text-xl">lock_open</span>
+              <h3 className="text-[10px] font-label text-on-surface-variant/60 uppercase tracking-[0.2em] font-black">Chưa mở khóa</h3>
             </div>
-            <div className="grid grid-cols-2 gap-3 opacity-60">
+            <div className="grid grid-cols-2 gap-3.5 opacity-60 grayscale hover:grayscale-0 transition-all duration-700">
               {locked.map(badge => (
-                <div key={badge.id} className="bg-surface-container p-4 rounded-2xl flex flex-col items-center text-center grayscale filter hover:grayscale-0 transition-all duration-500">
-                  <div className="text-3xl mb-2 opacity-70">{badge.icon}</div>
-                  <div className="text-sm font-headline font-bold text-on-surface mb-1">{badge.name}</div>
-                  <div className="text-[10px] text-on-surface-variant">{badge.desc}</div>
+                <div key={badge.id} className="bg-surface-container p-5 rounded-[32px] flex flex-col items-center text-center border border-on-surface/5">
+                  <div className="text-3xl mb-3 opacity-30">{badge.icon}</div>
+                  <div className="text-sm font-headline font-black text-on-surface/60 mb-1 leading-tight">{badge.name}</div>
+                  <div className="text-[9px] text-on-surface-variant/50 font-bold leading-relaxed px-2">{badge.desc}</div>
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* Guide */}
-        <section className="bg-tertiary-container/20 border border-tertiary-container/30 p-5 rounded-3xl mt-8">
-          <div className="flex gap-4 items-start">
-            <span className="material-symbols-outlined text-tertiary-container fill-1 text-2xl mt-1">lightbulb</span>
-            <div>
-              <h4 className="text-sm font-bold text-on-surface mb-1">Hướng dẫn mở khóa</h4>
-              <p className="text-xs text-on-surface-variant leading-relaxed">
-                Tưới cây mỗi ngày, ghi nhận task và doanh thu để tích điểm và mở khóa huy hiệu. Streak liên tiếp sẽ nhân ×1.2 điểm!
+        {/* Guide: Premium info card */}
+        <section className="bg-primary/5 border border-primary/10 p-6 rounded-[32px] mt-10 relative overflow-hidden group">
+          <div className="absolute -right-4 -bottom-4 text-6xl text-primary/10 group-hover:rotate-12 transition-transform duration-700">💡</div>
+          <div className="flex gap-4 items-start relative z-10">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/5">
+              <span className="material-symbols-outlined font-black">tips_and_updates</span>
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-black text-on-surface mb-1 uppercase tracking-tight">Hướng dẫn mở khóa</h4>
+              <p className="text-xs text-on-surface-variant/80 leading-relaxed font-bold">
+                Tưới cây mỗi ngày, hoàn thành task và đạt mục tiêu doanh thu để tích điểm. Streak liên tiếp sẽ giúp bạn mở khóa những huy hiệu cao quý nhất!
               </p>
             </div>
           </div>
         </section>
 
-        <Link href="/forest" className="flex items-center justify-between bg-surface-container-lowest p-5 rounded-3xl shadow-sm border border-surface-container-highest mt-6 active:scale-95 transition-transform">
-          <div className="flex items-center gap-4">
-            <div className="text-3xl">🌲</div>
+        <Link href="/forest" className="flex items-center justify-between bg-surface-container-lowest p-6 rounded-[32px] shadow-sm border border-on-surface/5 mt-8 active:scale-[0.98] transition-all group overflow-hidden relative">
+          <div className="absolute inset-0 bg-primary/5 translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+          <div className="flex items-center gap-5 relative z-10">
+            <div className="text-4xl transform group-hover:rotate-12 transition-transform">🌲</div>
             <div>
-              <h4 className="font-headline font-extrabold text-on-surface text-sm">Khu Rừng Thành Công</h4>
-              <p className="text-xs text-on-surface-variant font-medium mt-0.5">{profile.savedTrees} cây đã lưu</p>
+              <h4 className="font-headline font-black text-on-surface text-base tracking-tight">Khu Rừng Thành Công</h4>
+              <p className="text-[10px] text-on-surface-variant font-black uppercase tracking-widest mt-1">{profile.savedTrees} Cây đã lưu</p>
             </div>
           </div>
-          <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+          <span className="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform relative z-10 font-black">arrow_forward_ios</span>
         </Link>
+
 
       </main>
 

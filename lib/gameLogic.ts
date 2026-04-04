@@ -44,6 +44,54 @@ export function getLastNDays(n: number): string[] {
   return dates;
 }
 
+// Get full calendar grid for a specific month (42 days to fill 6 weeks)
+export function getCalendarGrid(year: number, month: number): { date: string, isCurrentMonth: boolean, day: number }[] {
+  const firstDayOfMonth = new Date(year, month, 1);
+  const lastDayOfMonth = new Date(year, month + 1, 0);
+  
+  // Day of week of first day (0-6, 0=Sun)
+  const startDay = firstDayOfMonth.getDay();
+  
+  const days: { date: string, isCurrentMonth: boolean, day: number }[] = [];
+  
+  // Padding from previous month
+  const prevMonthLastDay = new Date(year, month, 0);
+  for (let i = startDay - 1; i >= 0; i--) {
+    const d = new Date(year, month - 1, prevMonthLastDay.getDate() - i);
+    days.push({
+      date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+      isCurrentMonth: false,
+      day: d.getDate()
+    });
+  }
+  
+  // Days of current month
+  for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+    days.push({
+      date: `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
+      isCurrentMonth: true,
+      day: i
+    });
+  }
+  
+  // Padding for next month to reach 42 days (6 weeks)
+  const remaining = 42 - days.length;
+  for (let i = 1; i <= remaining; i++) {
+    const d = new Date(year, month + 1, i);
+    days.push({
+      date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+      isCurrentMonth: false,
+      day: i
+    });
+  }
+  
+  return days;
+}
+
+export function getMonthName(date: Date): string {
+  return date.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+}
+
 // Format date for display
 export function formatDateDisplay(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -151,7 +199,9 @@ export function processPlantEvolution(
 export function calculateDayScore(
   wateredToday: boolean,
   normalTasksDone: number,
+  normalTasksTotal: number,
   hardTasksDone: number,
+  hardTasksTotal: number,
   revenueTotal: number,
   revenueTarget: number,
   currentWinStreak: number
@@ -169,7 +219,8 @@ export function calculateDayScore(
   const totalDayScore = wateringPts + taskPts + revenuePts;
 
   const tasksDone = normalTasksDone + hardTasksDone;
-  const taskPercent = (tasksDone / TOTAL_TASKS) * 100;
+  const totalTasks = (normalTasksTotal || 0) + (hardTasksTotal || 0);
+  const taskPercent = totalTasks > 0 ? (tasksDone / totalTasks) * 100 : 0;
   const revenuePercent = revenueTarget > 0 ? (revenueTotal / revenueTarget) * 100 : 0;
 
   const isWin = totalDayScore > WIN_SCORE_THRESHOLD && (taskPercent + revenuePercent) > WIN_PERCENT_THRESHOLD;

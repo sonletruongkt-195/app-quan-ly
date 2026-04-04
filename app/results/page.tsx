@@ -95,47 +95,50 @@ export default function ResultsPage() {
     <div className="pb-32 bg-surface min-h-screen relative">
       {isWin && <Confetti />}
 
-      {/* Hero Section */}
-      <section className={`px-6 py-10 pb-8 text-center rounded-b-[2rem] shadow-sm relative overflow-hidden ${isWin ? 'bg-primary text-on-primary' : 'bg-error-container text-on-error-container'}`}>
-        {isWin && <div className="absolute inset-0 bg-radial-gradient from-primary-fixed/20 to-transparent"></div>}
+      {/* Hero Section: Glassmorphism Celebration */}
+      <section className={`px-6 py-12 pb-10 text-center rounded-b-[48px] shadow-lg relative overflow-hidden ${isWin ? 'bg-primary shadow-primary/20' : 'bg-error shadow-error/20'}`}>
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]"></div>
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/20 rounded-full blur-3xl animate-pulse"></div>
         
         <div className="relative z-10 flex flex-col items-center">
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`text-[10px] font-bold tracking-widest uppercase ${isWin ? 'text-on-primary/80' : 'text-error'}`}>
-              {isWin ? '🏆 SUCCESS SEQUENCE' : '🌧️ RECOVERY ZONE'}
+          <div className="flex flex-col items-center gap-1 mb-6">
+            <span className={`text-[10px] font-black tracking-[0.4em] uppercase ${isWin ? 'text-on-primary/60' : 'text-on-error/60'}`}>
+              Daily Record • 2026
             </span>
-          </div>
-          <div className={`text-[9px] font-bold tracking-widest uppercase font-label mb-2 ${isWin ? 'text-on-primary/60' : 'text-error/70'}`}>
-            DAILY MILESTONE • STATUS
+            <div className={`h-1 w-12 rounded-full mt-2 ${isWin ? 'bg-on-primary/30' : 'bg-on-error/30'}`}></div>
           </div>
           
-          <h1 className="text-5xl font-headline font-extrabold tracking-tight mb-4">
-            {isWin ? 'WIN!' : 'LOSE'}
+          <h1 className="text-7xl font-headline font-black tracking-tighter mb-4 text-white drop-shadow-sm">
+            {isWin ? 'WIN!' : 'TRY'}
           </h1>
           
-          <p className={`text-sm font-medium mb-6 px-4 ${isWin ? 'text-on-primary/90' : 'text-on-error-container/80'}`}>
+          <p className={`text-sm font-bold mb-8 px-6 leading-relaxed max-w-xs ${isWin ? 'text-on-primary/90' : 'text-on-error/90'}`}>
             {isWin 
-              ? '"Your focus is flourishing! You\'ve successfully cultivated all today\'s habits."' 
-              : '"The greenhouse felt a bit quiet today. Don\'t worry — even the best gardeners have rainy days."'}
+              ? 'Tâm hồn nảy nở! Bạn đã nuôi dưỡng hệ sinh thái của mình một cách xuất sắc.' 
+              : 'Một chút tĩnh lặng cho khu rừng. Ngày mai nắng sẽ lại lên thôi!'}
           </p>
 
-          <div className={`inline-flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm shadow-inner ${isWin ? 'bg-on-primary/20 text-on-primary' : 'bg-error/10 text-error'}`}>
-            ⭐ {Math.round(entry.totalDayScore)} điểm kiếm được 
-            {entry.streakMultiplier > 1 && ` (×${entry.streakMultiplier})`}
+          <div className={`inline-flex items-center justify-center px-6 py-3 rounded-2xl font-headline font-black text-base shadow-xl border border-white/10 ${isWin ? 'bg-white/20 text-white backdrop-blur-md' : 'bg-white/10 text-white backdrop-blur-md'}`}>
+            ⭐ {Math.round(entry.totalDayScore)} <span className="text-[10px] font-black opacity-60 ml-1.5 uppercase tracking-widest pt-1">Points</span>
+            {entry.streakMultiplier > 1 && (
+              <span className="ml-3 px-2 py-0.5 bg-tertiary text-on-tertiary text-[10px] rounded-lg animate-bounce">
+                ×{entry.streakMultiplier}
+              </span>
+            )}
           </div>
 
-          <div className="flex gap-3 w-full mt-8">
+          <div className="flex gap-4 w-full mt-12">
             {isWin ? (
-              <Link href="/" className="flex-1 bg-on-primary/20 hover:bg-on-primary/30 border border-on-primary/30 text-on-primary font-bold py-3 px-4 rounded-full backdrop-blur-md transition-all">
+              <Link href="/" className="flex-1 bg-white text-primary font-black py-4 px-6 rounded-[24px] shadow-xl hover:scale-105 active:scale-95 transition-all text-sm uppercase tracking-widest">
                 🌿 Collect Rewards
               </Link>
             ) : (
               <>
-                <Link href="/stats" className="flex-1 bg-error/10 hover:bg-error/20 border border-error/20 text-error font-bold py-3 px-4 rounded-full backdrop-blur-md transition-all">
-                  📊 View Stats
+                <Link href="/stats" className="flex-1 bg-white/20 border border-white/30 text-white font-black py-4 px-6 rounded-[24px] backdrop-blur-md hover:bg-white/30 transition-all text-xs uppercase tracking-widest">
+                  📊 Analysis
                 </Link>
-                <Link href="/" className="flex-1 bg-error text-on-error hover:opacity-90 font-bold py-3 px-4 rounded-full transition-all shadow-md">
-                  🌱 Try Tomorrow
+                <Link href="/" className="flex-1 bg-white text-error font-black py-4 px-6 rounded-[24px] shadow-xl hover:scale-105 transition-all text-xs uppercase tracking-widest">
+                  🌱 Retake
                 </Link>
               </>
             )}
@@ -143,67 +146,81 @@ export default function ResultsPage() {
         </div>
       </section>
 
+
       <main className="px-6 py-6 space-y-6">
-        {/* Score Breakdown */}
-        <section className="bg-surface-container-lowest rounded-3xl p-6 shadow-sm border border-surface-container-highest">
-          <h3 className="text-xs font-label text-on-surface-variant tracking-widest uppercase mb-4">Chi tiết điểm</h3>
+        {/* Score Breakdown: Premium Cards */}
+        <section className="bg-surface-container-lowest rounded-[40px] p-8 shadow-sm border border-on-surface/5 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-5">
+            <span className="material-symbols-outlined text-6xl">receipt_long</span>
+          </div>
+          <h3 className="text-[10px] font-label text-on-surface-variant font-black tracking-[0.2em] uppercase mb-8">Phân rã điểm số</h3>
           
-          <div className="space-y-3">
+          <div className="space-y-5 relative z-10">
             {[
-              { label: '💧 Tưới cây', value: entry.wateringPts, unit: 'đ' },
-              { label: `✅ Tasks (${taskDone}/7)`, value: entry.taskPts, unit: 'đ' },
-              { label: `💰 Doanh thu`, value: entry.revenuePts, unit: 'đ' },
-              ...(entry.streakMultiplier > 1 ? [{ label: `⚡ Streak ×${entry.streakMultiplier}`, value: null, unit: '' }] : []),
+              { label: 'Tưới cây', value: entry.wateringPts, icon: 'water_drop', color: 'text-sky-500' },
+              { label: `Nhiệm vụ (${taskDone}/7)`, value: entry.taskPts, icon: 'checklist', color: 'text-primary' },
+              { label: `Doanh thu hiệu quả`, value: entry.revenuePts, icon: 'payments', color: 'text-secondary' },
             ].map((row, i) => (
-              <div key={i} className="flex justify-between items-center text-sm">
-                <span className="font-medium text-on-surface-variant font-body">{row.label}</span>
-                {row.value !== null && (
-                  <span className={`font-bold font-headline ${row.value > 0 ? 'text-primary' : row.value < 0 ? 'text-error' : 'text-on-surface'}`}>
-                    {row.value > 0 ? '+' : ''}{row.value.toFixed(1)}{row.unit}
-                  </span>
-                )}
+              <div key={i} className="flex justify-between items-center group/item hover:translate-x-1 transition-transform">
+                <div className="flex items-center gap-3">
+                  <span className={`material-symbols-outlined text-lg ${row.color} font-black`}>{row.icon}</span>
+                  <span className="text-sm font-black text-on-surface-variant uppercase tracking-tight">{row.label}</span>
+                </div>
+                <span className={`text-sm font-headline font-black ${row.value > 0 ? 'text-primary' : row.value < 0 ? 'text-error' : 'text-on-surface'}`}>
+                  {row.value > 0 ? '+' : ''}{row.value.toFixed(1)}đ
+                </span>
               </div>
             ))}
-            <div className="border-t border-surface-container-high pt-3 mt-1 flex justify-between items-center">
-              <span className="font-bold text-on-surface text-sm uppercase tracking-wider">TỔNG NGÀY</span>
-              <span className={`text-xl font-headline font-extrabold ${isWin ? 'text-primary' : 'text-error'}`}>
+            <div className="pt-6 mt-4 border-t border-on-surface/5 flex justify-between items-center">
+              <span className="font-black text-on-surface text-xs uppercase tracking-[0.2em]">KẾT QUẢ CUỐI</span>
+              <span className={`text-3xl font-headline font-black tracking-tighter ${isWin ? 'text-primary' : 'text-error'}`}>
                 {entry.totalDayScore.toFixed(1)}đ
               </span>
             </div>
           </div>
         </section>
 
-        {/* Win Condition Check */}
-        <section className="bg-surface-container-lowest rounded-3xl p-6 shadow-sm border border-surface-container-highest">
-          <h3 className="text-xs font-label text-on-surface-variant tracking-widest uppercase mb-4">Điều kiện WIN</h3>
+
+        {/* Win Condition Check: Visual Indicators */}
+        <section className="bg-surface-container-lowest rounded-[40px] p-8 shadow-sm border border-on-surface/5">
+          <h3 className="text-[10px] font-label text-on-surface-variant font-black tracking-[0.2em] uppercase mb-8">Điều kiện chiến thắng</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
             {[
               {
-                label: '% Task + % Doanh thu > 100%',
+                label: 'PHÂN TÍCH TỔNG LỰC',
+                detail: '% Task + % Doanh thu > 100%',
                 actual: `${taskPercent}% + ${revenuePercent}% = ${Math.round(total)}%`,
                 pass: total > 100,
+                icon: 'auto_awesome'
               },
               {
-                label: 'Tổng điểm ngày > 5đ',
+                label: 'ĐIỂM SỐ TÍCH LŨY',
+                detail: 'Tổng điểm ngày > 5đ',
                 actual: `${entry.totalDayScore.toFixed(1)}đ`,
                 pass: entry.totalDayScore > 5,
+                icon: 'star'
               },
             ].map((cond, i) => (
-              <div key={i} className="flex justify-between items-center">
+              <div key={i} className={`flex justify-between items-center p-6 rounded-[32px] border ${cond.pass ? 'bg-primary/5 border-primary/10 text-primary' : 'bg-error/5 border-error/10 text-error'} group active:scale-[0.98] transition-all`}>
                 <div>
-                  <div className="text-xs font-medium text-on-surface-variant mb-1">{cond.label}</div>
-                  <div className={`text-sm font-bold ${cond.pass ? 'text-primary' : 'text-error'}`}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="material-symbols-outlined text-[14px] font-black">{cond.icon}</span>
+                    <div className="text-[9px] font-black uppercase tracking-[0.1em] opacity-60">{cond.label}</div>
+                  </div>
+                  <div className="text-sm font-black tracking-tight mb-0.5">{cond.detail}</div>
+                  <div className="text-lg font-headline font-black tracking-tighter opacity-80">
                     {cond.actual}
                   </div>
                 </div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${cond.pass ? 'bg-primary-container text-primary' : 'bg-error-container text-error'}`}>
-                  <span className="material-symbols-outlined text-lg">{cond.pass ? 'check' : 'close'}</span>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 ${cond.pass ? 'bg-white border-primary/20 shadow-lg shadow-primary/10' : 'bg-white border-error/20 shadow-lg shadow-error/10'}`}>
+                  <span className="material-symbols-outlined text-2xl font-black">{cond.pass ? 'check_circle' : 'cancel'}</span>
                 </div>
               </div>
             ))}
           </div>
         </section>
+
 
         {/* Revenue Detail */}
         <section className="bg-surface-container-lowest rounded-3xl p-6 shadow-sm border border-surface-container-highest">

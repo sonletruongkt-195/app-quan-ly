@@ -55,8 +55,10 @@ export interface DailyEntry {
   wateredAt: Timestamp | null;
 
   // Tasks (checkboxes)
-  normalTasksDone: number; // 0-5
-  hardTasksDone: number;   // 0-2
+  normalTasksDone: number; 
+  normalTasksTotal: number;
+  hardTasksDone: number;
+  hardTasksTotal: number;
 
   // Revenue
   revenue: DailyRevenue;
@@ -97,7 +99,9 @@ export const DEFAULT_DAILY_ENTRY: Omit<DailyEntry, 'date'> = {
   wateredToday: false,
   wateredAt: null,
   normalTasksDone: 0,
+  normalTasksTotal: 0,
   hardTasksDone: 0,
+  hardTasksTotal: 0,
   revenue: { dienLanh: 0, chay: 0, laiXe: 0 },
   revenueTotal: 0,
   revenueTarget: 0,
