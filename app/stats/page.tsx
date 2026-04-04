@@ -129,7 +129,7 @@ export default function StatsPage() {
                   </div>
                   <div className="flex flex-col items-center text-center h-[15%]">
                     <span className={`text-[10px] font-black ${isToday ? 'text-primary' : 'text-on-surface-variant/70'}`}>
-                      {getDayLabel(date)[0]}
+                      {getDayLabel(date)}
                     </span>
                   </div>
                 </div>
