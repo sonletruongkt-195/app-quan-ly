@@ -51,7 +51,9 @@ CREATE TABLE IF NOT EXISTS daily_entries (
   
   -- Task Data
   normal_tasks_done INT DEFAULT 0,
+  normal_tasks_total INT DEFAULT 0,
   hard_tasks_done INT DEFAULT 0,
+  hard_tasks_total INT DEFAULT 0,
   
   -- Revenue Data
   revenue_dien_lanh NUMERIC DEFAULT 0,
@@ -60,6 +62,11 @@ CREATE TABLE IF NOT EXISTS daily_entries (
   revenue_total NUMERIC DEFAULT 0,
   revenue_target NUMERIC DEFAULT 0,
   
+  -- Tracking Thách thức và Bonus
+  challenge_id INTEGER,
+  challenge_status TEXT DEFAULT 'none',
+  challenge_bonus INT DEFAULT 0,
+
   -- Trạng thái chốt ngày
   submitted BOOLEAN DEFAULT false,
   submitted_at TIMESTAMPTZ,
