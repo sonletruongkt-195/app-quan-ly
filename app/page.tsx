@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -78,10 +78,6 @@ export default function DashboardPage() {
   const [showChallenge, setShowChallenge] = useState(false);
   const [challengeType, setChallengeType] = useState<number | null>(null);
   const [baselineTasks, setBaselineTasks] = useState({ normal: 5, hard: 2 });
-  
-  // Chart refs for auto-scrolling
-  const revenueScrollRef = useRef<HTMLDivElement>(null);
-  const taskScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     toggleZenBgm(zenMode);
@@ -121,20 +117,6 @@ export default function DashboardPage() {
       });
     }
   }, [user, profile, todayEntry?.date]);
-
-  // Effect to auto-scroll charts to the end (today) on load
-  useEffect(() => {
-    if (entries.length > 0) {
-      setTimeout(() => {
-        if (revenueScrollRef.current) {
-          revenueScrollRef.current.scrollLeft = revenueScrollRef.current.scrollWidth;
-        }
-        if (taskScrollRef.current) {
-          taskScrollRef.current.scrollLeft = taskScrollRef.current.scrollWidth;
-        }
-      }, 300); // Small delay to ensure rendering is complete
-    }
-  }, [entries]);
 
   useEffect(() => {
     if (user) {
@@ -671,18 +653,28 @@ export default function DashboardPage() {
               <h4 className="text-xl font-headline font-black text-on-surface tracking-tight">Doanh thu thực tế</h4>
             </div>
             <div className="text-right">
-              <p className="text-[9px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-1 rounded-full border border-primary/5">30 Ngày Qua</p>
+              {(() => {
+                const last30 = getLastNDays(30);
+                const first15Val = last30.slice(0, 15).reduce((sum, d) => sum + (entryMap[d]?.revenueTotal || 0), 0);
+                const last15Val = last30.slice(15).reduce((sum, d) => sum + (entryMap[d]?.revenueTotal || 0), 0);
+                const diff = first15Val > 0 ? ((last15Val - first15Val) / first15Val) * 100 : 0;
+                
+                return (
+                  <div className={`px-2 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${diff >= 0 ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-error/10 border-error/20 text-error'}`}>
+                    {diff >= 0 ? '↑' : '↓'} {Math.abs(Math.round(diff))}%
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
-          <div className="overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide" ref={revenueScrollRef}>
-            <div className="h-44 min-w-[700px] relative">
+          <div className="h-44 w-full relative">
             {(() => {
               const last30 = getLastNDays(30);
               const dataPoints = last30.map(d => entryMap[d]?.revenueTotal || 0);
               const maxVal = Math.max(1, ...dataPoints, profile.dailyRevenueTarget);
               
-              const width = 700; // viewBox width
+              const width = 400; // viewBox width for Sparkline
               const height = 150;
               const padding = 5;
               const chartW = width - (padding * 2);
@@ -728,7 +720,6 @@ export default function DashboardPage() {
                 </svg>
               );
             })()}
-            </div>
           </div>
           <div className="flex justify-between px-1 border-t border-on-surface/5 pt-4">
              <div className="flex flex-col">
@@ -751,8 +742,7 @@ export default function DashboardPage() {
               <h4 className="text-xl font-headline font-black text-on-surface tracking-tight">Số Task Hoàn Thành</h4>
             </div>
 
-            <div className="overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide" ref={taskScrollRef}>
-              <div className="flex items-end justify-between h-32 gap-1 min-w-[700px]">
+            <div className="flex items-end justify-between h-32 px-1 gap-[2px] w-full">
               {getLastNDays(30).map((date) => {
                 const e = entryMap[date];
                 const done = (e?.normalTasksDone || 0) + (e?.hardTasksDone || 0);
@@ -764,7 +754,7 @@ export default function DashboardPage() {
 
                 return (
                   <div key={date} className="flex-1 flex flex-col items-center gap-1 group relative h-full justify-end">
-                    <div className="w-full relative flex flex-col-reverse items-center h-full max-w-[8px]">
+                    <div className="w-full relative flex flex-col-reverse items-center h-full max-w-[4px]">
                       {/* Done Part */}
                       <div 
                         style={{ height: `${donePct}%` }}
@@ -779,7 +769,6 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
-              </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4 mt-2">
