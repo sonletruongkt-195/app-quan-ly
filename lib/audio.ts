@@ -6,7 +6,7 @@
 const AUDIO_URLS = {
   watering: 'https://assets.mixkit.co/active_storage/sfx/2281/2281-preview.mp3',
   success: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
-  zenBgm: 'https://cdn.pixabay.com/audio/2022/05/27/audio_180873748b.mp3', // Gentle Nature
+  zenBgm: 'https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3', // Nature sounds
 };
 
 export const playWatering = () => {

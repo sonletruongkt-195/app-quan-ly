@@ -252,9 +252,7 @@ export default function DashboardPage() {
           <span className="text-[9px] font-black uppercase tracking-widest">{zenMode ? 'Zen ON' : 'Zen OFF'}</span>
         </button>
         <div className="text-right">
-          <div className="text-primary font-headline tracking-tight font-bold text-sm">
-            {profile.totalGamePoints} pts
-          </div>
+          {/* Points display removed per user request */}
         </div>
       </header>
 
