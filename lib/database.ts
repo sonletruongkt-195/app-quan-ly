@@ -23,6 +23,7 @@ function profileFromDB(dbData: any): UserProfile {
     longestWinStreak: dbData.longest_win_streak,
     dailyRevenueTarget: Number(dbData.daily_revenue_target),
     revenueTargetMonth: dbData.revenue_target_month,
+    totalDiamonds: dbData.total_diamonds || 0,
     createdAt: dbData.created_at,
     updatedAt: dbData.updated_at,
   };
@@ -96,6 +97,7 @@ export async function createUserProfile(
     longest_win_streak: DEFAULT_PROFILE.longestWinStreak,
     daily_revenue_target: DEFAULT_PROFILE.dailyRevenueTarget,
     revenue_target_month: DEFAULT_PROFILE.revenueTargetMonth,
+    total_diamonds: DEFAULT_PROFILE.totalDiamonds,
   };
 
   const { error } = await supabase.from('profiles').upsert(profileData);
@@ -125,6 +127,7 @@ export async function updateUserProfile(
   if (updates.longestWinStreak !== undefined) dbUpdates.longest_win_streak = updates.longestWinStreak;
   if (updates.dailyRevenueTarget !== undefined) dbUpdates.daily_revenue_target = updates.dailyRevenueTarget;
   if (updates.revenueTargetMonth !== undefined) dbUpdates.revenue_target_month = updates.revenueTargetMonth;
+  if (updates.totalDiamonds !== undefined) dbUpdates.total_diamonds = updates.totalDiamonds;
   
   dbUpdates.updated_at = new Date().toISOString();
 
@@ -191,6 +194,17 @@ export async function getRecentEntries(uid: string, days: number = 7): Promise<D
 
   if (error || !data) return [];
   return data.map(entryFromDB).reverse();
+}
+
+export async function getAllEntries(uid: string): Promise<DailyEntry[]> {
+  const { data, error } = await supabase
+    .from('daily_entries')
+    .select('*')
+    .eq('profile_id', uid)
+    .order('date', { ascending: true });
+
+  if (error || !data) return [];
+  return data.map(entryFromDB);
 }
 
 export async function getEntriesByDateRange(uid: string, startDate: string, endDate: string): Promise<DailyEntry[]> {
@@ -273,7 +287,7 @@ export async function waterPlant(uid: string, profile: UserProfile, todayEntry: 
 
 export async function submitDailyEntry(
   uid: string,
-  profile: UserProfile,
+  _staleProfile: UserProfile, // keep parameter for signature compatibility if needed, but we'll fetch fresh
   entry: {
     normalTasksDone: number;
     normalTasksTotal: number;
@@ -285,6 +299,10 @@ export async function submitDailyEntry(
   },
   todayEntry: DailyEntry | null // Added parameter
 ) : Promise<{ dayScore: ReturnType<typeof calculateDayScore>; updatedProfile: UserProfile }> {
+  // Fetch FRESH profile to avoid state sync issues
+  const profile = await getUserProfile(uid);
+  if (!profile) throw new Error("Profile not found");
+
   const today = getTodayStr();
   const revenueTotal = entry.revenue.dienLanh + entry.revenue.chay + entry.revenue.laiXe;
 
@@ -339,6 +357,16 @@ export async function submitDailyEntry(
     longestWinStreak: newLongest,
     totalGamePoints: Math.max(0, profile.totalGamePoints + submitPts),
   };
+
+  // 💎 Diamond Tracking
+  const prevMet = todayEntry?.submitted && todayEntry.revenueTotal >= todayEntry.revenueTarget && todayEntry.revenueTarget > 0;
+  const nowMet = revenueTotal >= entry.revenueTarget && entry.revenueTarget > 0;
+  
+  if (!prevMet && nowMet) {
+    profileUpdates.totalDiamonds = (profile.totalDiamonds || 0) + 1;
+  } else if (prevMet && !nowMet) {
+    profileUpdates.totalDiamonds = Math.max(0, (profile.totalDiamonds || 0) - 1);
+  }
 
   // If not watered today, apply -2 penalty to plant
   if (!entry.wateredToday) {

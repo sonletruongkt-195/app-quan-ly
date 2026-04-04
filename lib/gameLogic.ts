@@ -7,7 +7,7 @@ const PLANT_FLOWER_THRESHOLD = 7; // accumulated watering pts to get 1 flower
 const FLOWERS_PER_FRUIT = 4;
 const FRUITS_PER_TREE = 5;
 const WIN_SCORE_THRESHOLD = 5;
-const WIN_PERCENT_THRESHOLD = 100;
+const WIN_PERCENT_THRESHOLD = 50; // New threshold for the average percentage? No, let's keep it 100 but check logic
 const STREAK_WIN_LENGTH = 3;
 const STREAK_MULTIPLIER = 1.2;
 const LIFE_SAVER_COST = 10; // total game pts to revive dead plant
@@ -223,7 +223,8 @@ export function calculateDayScore(
   const taskPercent = totalTasks > 0 ? (tasksDone / totalTasks) * 100 : 0;
   const revenuePercent = revenueTarget > 0 ? (revenueTotal / revenueTarget) * 100 : 0;
 
-  const isWin = totalDayScore > WIN_SCORE_THRESHOLD && (taskPercent + revenuePercent) > WIN_PERCENT_THRESHOLD;
+  const goalPercent = (taskPercent + revenuePercent) / 2;
+  const isWin = totalDayScore >= WIN_SCORE_THRESHOLD && goalPercent >= 50; // If average is 50%, it's like original sum was 100%
 
   return {
     wateringPts,
@@ -233,6 +234,7 @@ export function calculateDayScore(
     totalDayScore,
     taskPercent,
     revenuePercent,
+    goalPercent,
     isWin,
   };
 }

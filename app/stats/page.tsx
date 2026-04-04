@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import BottomNav from '@/components/BottomNav';
-import { getRecentEntries } from '@/lib/database';
+import { getAllEntries } from '@/lib/database';
 import { getLastNDays, getDayLabel, getTodayStr } from '@/lib/gameLogic';
 import { DailyEntry } from '@/lib/types';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ export default function StatsPage() {
   useEffect(() => {
     if (!loading && !user) { router.replace('/login'); return; }
     if (user) {
-      getRecentEntries(user.id, 14).then((e) => {
+      getAllEntries(user.id).then((e) => {
         setEntries(e);
         setLoadingEntries(false);
       });
@@ -34,20 +34,35 @@ export default function StatsPage() {
   const today = getTodayStr();
 
   const submittedEntries = entries.filter(e => e.submitted);
+  
+  // 1. Total Points (Recalculated from records)
+  const totalPointsReal = submittedEntries.reduce((sum, e) => sum + e.totalDayScore, 0);
+  
+  // 2. Cumulative Revenue
+  const cumulativeRevenue = submittedEntries.reduce((sum, e) => sum + (e.revenueTotal || 0), 0);
+  
+  // 3. Total Tasks Completed
+  const totalTasksDone = submittedEntries.reduce((sum, e) => sum + (e.normalTasksDone + e.hardTasksDone), 0);
+  
+  // 4. Watering Success/Fail
+  const wateringSuccess = entries.filter(e => e.wateredToday).length;
+  const wateringMissed = entries.filter(e => !e.wateredToday && e.submitted).length;
 
   const winCount = submittedEntries.filter(e => e.isWin).length;
   const winRate = submittedEntries.length > 0
     ? Math.round((winCount / submittedEntries.length) * 100) : 0;
 
-  const totalRevenue = submittedEntries.reduce((sum, e) => sum + (e.revenueTotal || 0), 0);
-  const avgScore = submittedEntries.length > 0
-    ? (submittedEntries.reduce((sum, e) => sum + e.totalDayScore, 0) / submittedEntries.length).toFixed(1)
-    : '0';
-
+  const totalRevenueLast14 = submittedEntries.slice(-14).reduce((sum, e) => sum + (e.revenueTotal || 0), 0);
+  
   const maxScore = last7.reduce((max, date) => {
     const e = entryMap[date];
     return e?.submitted ? Math.max(max, e.totalDayScore) : max;
   }, 0);
+
+  // 30-day analytics calculations
+  const last30 = getLastNDays(30);
+  const maxRevenue30 = Math.max(...last30.map(d => entryMap[d]?.revenueTotal || 0), 0.1);
+  const maxTasks30 = Math.max(...last30.map(d => (entryMap[d]?.normalTasksTotal || 0) + (entryMap[d]?.hardTasksTotal || 0)), 1);
 
   return (
     <div className="pb-32 bg-surface min-h-screen relative">
@@ -68,16 +83,16 @@ export default function StatsPage() {
         {/* Quick stats grid */}
         <section className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Tổng điểm', value: profile.totalGamePoints, icon: 'star', color: 'text-tertiary', bg: 'bg-tertiary-container/30' },
-            { label: 'Win Rate', value: `${winRate}%`, icon: 'emoji_events', color: 'text-primary', bg: 'bg-primary-container/40' },
-            { label: 'Kỷ lục Streak', value: profile.longestWinStreak, icon: 'local_fire_department', color: 'text-error', bg: 'bg-error-container/30' },
-            { label: 'Streak hiện tại', value: profile.currentWinStreak, icon: 'bolt', color: 'text-[#0288D1]', bg: 'bg-[#0288D1]/10' },
+            { label: 'Tổng điểm', value: `${totalPointsReal.toFixed(1)}đ`, icon: 'star', color: 'text-tertiary', bg: 'bg-tertiary-container/30' },
+            { label: 'Doanh thu (M)', value: `${cumulativeRevenue.toFixed(1)}M`, icon: 'payments', color: 'text-primary', bg: 'bg-primary-container/40' },
+            { label: 'Task đã xong', value: totalTasksDone, icon: 'task_alt', color: 'text-secondary', bg: 'bg-secondary-container/20' },
+            { label: 'Tưới cây (✅/❌)', value: `${wateringSuccess} / ${wateringMissed}`, icon: 'water_drop', color: 'text-[#0288D1]', bg: 'bg-[#0288D1]/10' },
           ].map((s, i) => (
             <div key={i} className="bg-surface-container-lowest p-3 rounded-[24px] shadow-sm border border-on-surface/5 flex flex-col items-center justify-center text-center group active:scale-95 transition-transform">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-2 ${s.bg} border border-white/10 shadow-sm`}>
                 <span className={`material-symbols-outlined fill-1 text-lg ${s.color}`}>{s.icon}</span>
               </div>
-              <span className="text-xl font-headline font-black text-on-surface leading-none">{s.value}</span>
+              <span className="text-lg font-headline font-black text-on-surface leading-none">{s.value}</span>
               <span className="text-[9px] font-label font-bold uppercase tracking-wider text-on-surface-variant/80 mt-1">{s.label}</span>
             </div>
           ))}
@@ -162,10 +177,10 @@ export default function StatsPage() {
             <div className="absolute -right-8 -top-8 w-24 h-24 bg-primary/10 rounded-full blur-3xl"></div>
             <h3 className="text-[9px] font-label font-black text-on-surface-variant uppercase tracking-[0.2em] mb-3">Tổng doanh thu</h3>
             <div className="flex items-baseline gap-1.5 mb-1.5">
-              <span className="text-4xl font-headline font-black text-primary tracking-tighter">{totalRevenue.toFixed(1)}</span>
+              <span className="text-4xl font-headline font-black text-primary tracking-tighter">{cumulativeRevenue.toFixed(1)}</span>
               <span className="text-lg font-black text-primary/60">M</span>
             </div>
-            <p className="text-[10px] font-bold text-on-surface-variant/80">Phân tích từ {submittedEntries.length} ngày gần nhất</p>
+            <p className="text-[10px] font-bold text-on-surface-variant/80">Tính từ tất cả {submittedEntries.length} bản ghi</p>
             
             <div className="mt-8 space-y-4">
               {[
@@ -173,7 +188,7 @@ export default function StatsPage() {
                 { label: 'Chay', total: submittedEntries.reduce((s, e) => s + e.revenue.chay, 0), color: 'bg-emerald-500' },
                 { label: 'Lái xe', total: submittedEntries.reduce((s, e) => s + e.revenue.laiXe, 0), color: 'bg-amber-500' },
               ].map((cat) => {
-                const pct = totalRevenue > 0 ? (cat.total / totalRevenue) * 100 : 0;
+                const pct = cumulativeRevenue > 0 ? (cat.total / cumulativeRevenue) * 100 : 0;
                 return (
                   <div key={cat.label} className="group">
                     <div className="flex justify-between items-center mb-2 px-1">
@@ -191,6 +206,109 @@ export default function StatsPage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* 30-day Revenue Line Chart */}
+        <section className="bg-surface-container-lowest p-6 rounded-[28px] shadow-sm border border-on-surface/5">
+          <h3 className="text-[9px] font-label font-black text-on-surface-variant uppercase tracking-[0.2em] mb-6 px-0.5">Doanh thu thực tế (30 ngày)</h3>
+          
+          <div className="overflow-x-auto pb-4 -mx-1 scrollbar-hide">
+            <div className="min-w-[800px] h-40 relative">
+              <svg viewBox={`0 0 800 160`} className="w-full h-full" preserveAspectRatio="none">
+                {/* Area Gradient */}
+                <defs>
+                  <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--md-sys-color-primary)" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="var(--md-sys-color-primary)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Path Logic */}
+                {(() => {
+                  const points = last30.map((date, i) => {
+                    const e = entryMap[date];
+                    const val = e?.submitted ? e.revenueTotal : 0;
+                    const x = (i / 29) * 800;
+                    const y = 160 - (val / maxRevenue30) * 140 - 10;
+                    return { x, y };
+                  });
+                  
+                  const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                  const areaD = `${d} L 800 160 L 0 160 Z`;
+
+                  return (
+                    <>
+                      <path d={areaD} fill="url(#lineGradient)" />
+                      <path d={d} fill="none" stroke="var(--md-sys-color-primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                      {points.map((p, i) => (
+                        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--md-sys-color-surface-container-lowest)" stroke="var(--md-sys-color-primary)" strokeWidth="2" />
+                      ))}
+                    </>
+                  );
+                })()}
+              </svg>
+              
+              {/* Date Labels */}
+              <div className="flex justify-between mt-2 px-2 text-[8px] font-black text-on-surface-variant/40">
+                {last30.filter((_, i) => i % 5 === 0 || i === 29).map((date, i) => (
+                  <span key={i}>{date.slice(8, 10)}/{date.slice(5, 7)}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        {/* 30-day Stacked Task Bar Chart */}
+        <section className="bg-surface-container-lowest p-6 rounded-[28px] shadow-sm border border-on-surface/5">
+          <h3 className="text-[9px] font-label font-black text-on-surface-variant uppercase tracking-[0.2em] mb-6 px-0.5">Tổng số task hoàn thành (30 ngày)</h3>
+          
+          <div className="overflow-x-auto pb-4 -mx-1 scrollbar-hide">
+            <div className="min-w-[900px] h-48 flex items-end gap-1.5 px-2">
+              {last30.map((date) => {
+                const e = entryMap[date];
+                const done = e?.submitted ? (e.normalTasksDone + e.hardTasksDone) : 0;
+                const total = e?.submitted ? (e.normalTasksTotal + e.hardTasksTotal) : 0;
+                const remaining = Math.max(0, total - done);
+                
+                const doneHeight = total > 0 ? (done / 10) * 100 : 0; // Max 10 tasks height
+                const remHeight = total > 0 ? (remaining / 10) * 100 : 0;
+
+                return (
+                  <div key={date} className="flex-1 flex flex-col items-center gap-2 group">
+                    <div className="w-full h-32 flex flex-col justify-end bg-surface-container-highest/20 rounded-full overflow-hidden border border-on-surface/5">
+                      {/* Remainder Segment */}
+                      <div 
+                        className="w-full bg-on-surface/10 transition-all duration-700" 
+                        style={{ height: `${remHeight}%` }}
+                      ></div>
+                      {/* Done Segment */}
+                      <div 
+                        className="w-full bg-secondary shadow-inner transition-all duration-700 relative" 
+                        style={{ height: `${doneHeight}%` }}
+                      >
+                        <div className="absolute inset-0 bg-white/10 animate-shine"></div>
+                      </div>
+                    </div>
+                    <span className="text-[7px] font-black text-on-surface-variant/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {date.slice(8, 10)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div className="mt-4 flex gap-4 px-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-sm bg-secondary"></div>
+              <span className="text-[8px] font-bold text-on-surface-variant/80 uppercase">Đã hoàn thành</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-sm bg-on-surface/20"></div>
+              <span className="text-[8px] font-bold text-on-surface-variant/80 uppercase">Chưa hoàn thành</span>
             </div>
           </div>
         </section>

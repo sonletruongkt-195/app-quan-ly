@@ -12,6 +12,8 @@ import {
 } from '@/lib/gameLogic';
 import { waterPlant, getRecentEntries, getEntriesByDateRange, updateUserProfile } from '@/lib/database';
 import { DailyEntry } from '@/lib/types';
+import { playWatering, toggleZenBgm } from '@/lib/audio';
+import { usePathname } from 'next/navigation';
 
 // Premium Glassmorphism Gauge
 function CircularGauge({ percent, color, label, subLabel }: { percent: number; color: string; label: string; subLabel: string }) {
@@ -71,6 +73,11 @@ export default function DashboardPage() {
   const [evoMsg, setEvoMsg] = useState<string | null>(null);
   const [viewDate, setViewDate] = useState(new Date());
   const [monthEntries, setMonthEntries] = useState<DailyEntry[]>([]);
+  const [zenMode, setZenMode] = useState(false);
+
+  useEffect(() => {
+    toggleZenBgm(zenMode);
+  }, [zenMode]);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -113,6 +120,7 @@ export default function DashboardPage() {
       } else if (result.evolution.newFlower) {
         setEvoMsg('🌸 Tuyệt vời! Cây ra 1 Hoa mới!');
       } else {
+        playWatering();
         showToast('💧 Đã tưới cây! +1 điểm tích lũy');
       }
     } catch (e: any) {
@@ -176,10 +184,19 @@ export default function DashboardPage() {
           <div className="w-9 h-9 rounded-full overflow-hidden bg-primary-container/30 flex items-center justify-center border border-primary/20">
             <span className="text-lg">🌿</span>
           </div>
-          <h1 className="text-base font-bold text-primary font-headline tracking-tight">Digital Greenhouse</h1>
+          <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Greenhouse</div>
         </div>
-        <div className="text-primary font-headline tracking-tight font-bold text-sm">
-          {profile.totalGamePoints} pts
+        <button 
+          onClick={() => setZenMode(!zenMode)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-500 ${zenMode ? 'bg-primary/10 border-primary text-primary' : 'bg-surface-container border-on-surface/5 text-on-surface-variant/60'}`}
+        >
+          <span className={`material-symbols-outlined text-base ${zenMode ? 'fill-1' : ''}`}>spa</span>
+          <span className="text-[9px] font-black uppercase tracking-widest">{zenMode ? 'Zen ON' : 'Zen OFF'}</span>
+        </button>
+        <div className="text-right">
+          <div className="text-primary font-headline tracking-tight font-bold text-sm">
+            {profile.totalGamePoints} pts
+          </div>
         </div>
       </header>
 
@@ -234,9 +251,12 @@ export default function DashboardPage() {
               />
             </div>
           </div>
+        </section>
 
+        {/* Biological Health / Success Forest Stats */}
+        <section className="flex flex-col items-center space-y-12 px-1 mb-8">
           {/* Plant Health Module: Bento Card Style */}
-          <div className="w-full max-w-[260px] mt-6 bg-surface-container-lowest/60 backdrop-blur-md p-4 rounded-[28px] border border-on-surface/5 shadow-xl relative group">
+          <div className="w-full max-w-[260px] bg-surface-container-lowest/60 backdrop-blur-md p-4 rounded-[28px] border border-on-surface/5 shadow-xl relative group">
             <div className="flex justify-between items-center mb-2.5">
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${profile.plantAccumulatedPoints < 5 ? 'bg-error animate-ping' : 'bg-primary shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}></div>
@@ -267,6 +287,21 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {/* Success Forest Card (Relocated from Awards/Mockup) */}
+          <Link href="/forest" className="w-full flex items-center justify-between bg-surface-container-lowest/80 backdrop-blur-xl p-8 rounded-[40px] shadow-sm border border-on-surface/5 active:scale-[0.98] transition-all group overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="w-16 h-16 relative transform group-hover:rotate-6 group-hover:scale-110 transition-transform duration-500 drop-shadow-2xl">
+                <Image src="/plants/mature.png" alt="Success Forest" fill className="object-contain" />
+              </div>
+              <div>
+                <h4 className="font-headline font-black text-on-surface text-xl tracking-tight">Khu Rừng Thành Công</h4>
+                <p className="text-xs text-on-surface-variant/60 font-black uppercase tracking-widest mt-1.5">{profile.savedTrees} Cây đã lưu</p>
+              </div>
+            </div>
+            <span className="material-symbols-outlined text-primary group-hover:translate-x-1.5 transition-transform relative z-10 font-black text-3xl">arrow_forward_ios</span>
+          </Link>
         </section>
 
 
@@ -468,6 +503,221 @@ export default function DashboardPage() {
               });
             })()}
           </div>
+        </section>
+
+        {/* Weekly Revenue: Bar Chart with Target Background */}
+        <section className="bg-surface-container-lowest p-4 rounded-[28px] shadow-sm border border-on-surface/5 space-y-4">
+          <div className="flex justify-between items-center px-0.5">
+            <h3 className="text-[9px] font-bold text-on-surface-variant uppercase tracking-[0.15em]">Doanh thu thực tế (tuần)</h3>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-primary"></div>
+                <span className="text-[8px] font-bold text-on-surface-variant/60 uppercase">Thực tế</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-on-surface/10"></div>
+                <span className="text-[8px] font-bold text-on-surface-variant/60 uppercase">Mục tiêu</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-end justify-between h-44 px-1 gap-2 pt-10">
+            {getLastNDays(7).map((dateStr) => {
+              const entry = entries.find(e => e.date === dateStr);
+              const actual = entry?.revenueTotal || 0;
+              const target = entry?.revenueTarget || profile?.dailyRevenueTarget || 0;
+              const metTarget = actual >= target && target > 0;
+              
+              // We want the 'target' to be roughly 70% of the chart height to be clearly visible
+              // We find the max values for the whole week to keep bars relative to each other
+              const weekTargets = getLastNDays(7).map(d => entries.find(e => e.date === d)?.revenueTarget || profile?.dailyRevenueTarget || 0);
+              const weekActuals = getLastNDays(7).map(d => entries.find(e => e.date === d)?.revenueTotal || 0);
+              
+              const maxWeekTarget = Math.max(...weekTargets, 1);
+              const maxWeekActual = Math.max(...weekActuals, 1);
+              
+              // New scaling: normalize based on max target, but allow overshoot
+              // chartMax is determined by the highest of (target / 0.7) or (actual / 1.0)
+              const chartMax = Math.max(maxWeekTarget / 0.7, maxWeekActual / 0.95);
+              
+              const targetHeight = (target / chartMax) * 100;
+              const actualHeight = (actual / chartMax) * 100;
+
+              return (
+                <div key={dateStr} className="flex-1 flex flex-col items-center gap-2 group relative">
+                  {/* Diamond Indicator */}
+                  {metTarget && (
+                    <div className="absolute -top-8 transition-all z-20 drop-shadow-[0_4px_8px_rgba(255,255,255,0.4)]">
+                      <span className="text-base">💎</span>
+                    </div>
+                  )}
+
+                  <div className="w-full h-32 relative flex items-end justify-center">
+                    {/* Target Bar (Ghost) */}
+                    <div 
+                      style={{ height: `${targetHeight}%` }}
+                      className="absolute w-full bg-on-surface/[0.1] rounded-t-xl transition-all duration-500"
+                    ></div>
+                    {/* Actual Bar (Solid) */}
+                    <div 
+                      style={{ height: `${actualHeight}%` }}
+                      className="relative w-4/5 bg-primary rounded-t-xl shadow-md transition-all duration-700 z-10 group-hover:brightness-110"
+                    >
+                      {/* Sub-indicator if reaching target */}
+                      {actualHeight > 0 && (
+                        <div className="absolute top-0 left-0 w-full h-1 bg-white/20 rounded-full opacity-0 group-hover:opacity-100"></div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <span className={`text-[8px] font-black uppercase tracking-tighter ${dateStr === today ? 'text-primary' : 'text-on-surface-variant/40'}`}>
+                    {getDayLabel(dateStr)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* 30-Day Revenue Line Chart */}
+        <section className="bg-surface-container-lowest p-6 rounded-[40px] shadow-sm border border-on-surface/5 space-y-6">
+          <div className="flex justify-between items-start px-1">
+            <div>
+              <h3 className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] mb-1">XU HƯỚNG 30 NGÀY</h3>
+              <h4 className="text-xl font-headline font-black text-on-surface tracking-tight">Doanh thu thực tế</h4>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-1 rounded-full border border-primary/5">30 Ngày Qua</p>
+            </div>
+          </div>
+
+          <div className="h-44 w-full relative">
+            {(() => {
+              const last30 = getLastNDays(30);
+              const dataPoints = last30.map(d => entryMap[d]?.revenueTotal || 0);
+              const maxVal = Math.max(1, ...dataPoints, profile.dailyRevenueTarget);
+              
+              const width = 400; // viewBox width
+              const height = 150;
+              const padding = 5;
+              const chartW = width - (padding * 2);
+              const chartH = height - (padding * 2);
+
+              const points = last30.map((date, i) => {
+                const val = entryMap[date]?.revenueTotal || 0;
+                return {
+                  x: padding + (i * (chartW / 29)),
+                  y: height - padding - (val / maxVal * chartH)
+                };
+              });
+
+              let pathD = `M ${points[0].x} ${points[0].y}`;
+              for (let i = 0; i < points.length - 1; i++) {
+                const xc = (points[i].x + points[i + 1].x) / 2;
+                const yc = (points[i].y + points[i + 1].y) / 2;
+                pathD += ` Q ${points[i].x} ${points[i].y}, ${xc} ${yc}`;
+              }
+              pathD += ` L ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+
+              const fillD = `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+
+              return (
+                <svg className="w-full h-full overflow-visible" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+                   <defs>
+                    <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.2" />
+                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {/* Target line (Dashed) */}
+                  <line 
+                    x1={padding} y1={height - padding - (profile.dailyRevenueTarget / maxVal * chartH)} 
+                    x2={width - padding} y2={height - padding - (profile.dailyRevenueTarget / maxVal * chartH)} 
+                    stroke="currentColor" className="text-on-surface-variant/20" strokeDasharray="4 4"
+                  />
+                  <path d={fillD} fill="url(#lineGrad)" />
+                  <path d={pathD} fill="none" stroke="var(--color-primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  
+                  {/* Only last point highlight */}
+                  <circle cx={points[29].x} cy={points[29].y} r="5" fill="var(--color-primary)" className="animate-pulse" />
+                </svg>
+              );
+            })()}
+          </div>
+          <div className="flex justify-between px-1 border-t border-on-surface/5 pt-4">
+             <div className="flex flex-col">
+                <span className="text-[8px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">Tổng cộng</span>
+                <span className="text-sm font-headline font-black text-on-surface">
+                  {entries.reduce((sum, e) => sum + (e.revenueTotal || 0), 0).toLocaleString()} VNĐ
+                </span>
+             </div>
+             <div className="flex flex-col text-right">
+                <span className="text-[8px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">Mục tiêu TB</span>
+                <span className="text-sm font-headline font-black text-primary">{profile.dailyRevenueTarget}tr</span>
+             </div>
+          </div>
+        </section>
+
+        {/* 30-Day Tasks Stacked Bar Chart */}
+        <section className="bg-surface-container-lowest p-6 rounded-[40px] shadow-sm border border-on-surface/5 space-y-6">
+           <div>
+              <h3 className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] mb-1">NĂNG SUẤT</h3>
+              <h4 className="text-xl font-headline font-black text-on-surface tracking-tight">Số Task Hoàn Thành</h4>
+            </div>
+
+            <div className="flex items-end justify-between h-32 px-1 gap-1">
+              {getLastNDays(30).map((date) => {
+                const e = entryMap[date];
+                const done = (e?.normalTasksDone || 0) + (e?.hardTasksDone || 0);
+                const total = (e?.normalTasksTotal || 0) + (e?.hardTasksTotal || 0) || 7;
+                const missed = Math.max(0, total - done);
+                
+                const donePct = (done / total) * 100;
+                const missedPct = (missed / total) * 100;
+
+                return (
+                  <div key={date} className="flex-1 flex flex-col items-center gap-1 group relative h-full justify-end">
+                    <div className="w-full relative flex flex-col-reverse items-center h-full max-w-[8px]">
+                      {/* Done Part */}
+                      <div 
+                        style={{ height: `${donePct}%` }}
+                        className="w-full bg-primary rounded-sm transition-all duration-700 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
+                      ></div>
+                      {/* Missed Part */}
+                      <div 
+                        style={{ height: `${missedPct}%` }}
+                        className="w-full bg-on-surface/5 rounded-t-sm transition-all duration-500"
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="bg-surface-container/50 p-3 rounded-2xl border border-on-surface/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                  <span className="text-[8px] font-black text-on-surface-variant uppercase tracking-widest">Hoàn thành</span>
+                </div>
+                <p className="text-sm font-headline font-black text-on-surface">
+                  {entries.reduce((sum, e) => sum + (e.normalTasksDone + e.hardTasksDone), 0)}
+                </p>
+              </div>
+              <div className="bg-surface-container/50 p-3 rounded-2xl border border-on-surface/5 text-right">
+                <div className="flex items-center gap-2 mb-1 justify-end">
+                  <span className="text-[8px] font-black text-on-surface-variant uppercase tracking-widest">Chưa đạt</span>
+                  <div className="w-2 h-2 rounded-full bg-on-surface/10"></div>
+                </div>
+                <p className="text-sm font-headline font-black text-on-surface-variant">
+                  {entries.reduce((sum, e) => {
+                    const total = (e.normalTasksTotal || 0) + (e.hardTasksTotal || 0) || 7;
+                    const done = e.normalTasksDone + e.hardTasksDone;
+                    return sum + Math.max(0, total - done);
+                  }, 0)}
+                </p>
+              </div>
+            </div>
         </section>
       </main>
 

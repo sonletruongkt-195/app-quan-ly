@@ -37,6 +37,8 @@ export interface UserProfile {
   dailyRevenueTarget: number; // in million VND
   revenueTargetMonth: string; // 'YYYY-MM' - month this target was set
 
+  totalDiamonds: number;
+
   createdAt: Timestamp | null;
   updatedAt: Timestamp | null;
 }
@@ -93,6 +95,7 @@ export const DEFAULT_PROFILE: Omit<UserProfile, 'uid' | 'displayName' | 'email' 
   longestWinStreak: 0,
   dailyRevenueTarget: 0,
   revenueTargetMonth: '',
+  totalDiamonds: 0,
 };
 
 export const DEFAULT_DAILY_ENTRY: Omit<DailyEntry, 'date'> = {
@@ -138,5 +141,6 @@ export interface DayScoreResult {
   totalDayScore: number;
   taskPercent: number;
   revenuePercent: number;
+  goalPercent: number;
   isWin: boolean;
 }

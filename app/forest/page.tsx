@@ -63,10 +63,10 @@ export default function ForestPage() {
           
           <div className="flex items-center justify-between relative px-2">
             {[
-              { icon: '💧', label: '7 ngày' },
-              { icon: '🌸', label: '1 Hoa' },
-              { icon: '🍎', label: '4 Hoa' },
-              { icon: '🌳', label: '5 Quả' },
+              { icon: '💧', label: '7 Lần tưới' },
+              { icon: '🌸', label: '4 Bông hoa' },
+              { icon: '🍎', label: '5 Quả ngọt' },
+              { icon: '🌳', label: 'Lưu Rừng' },
             ].map((step, i, arr) => (
               <div key={i} className="flex items-center flex-1 last:flex-none">
                 <div className="flex flex-col items-center text-center z-10">
@@ -134,7 +134,7 @@ export default function ForestPage() {
             <span className="material-symbols-outlined text-3xl mb-3">auto_awesome</span>
             <h3 className="text-lg font-headline font-extrabold mb-2">Mỗi cây là một thành tựu</h3>
             <p className="text-xs opacity-90 leading-relaxed font-medium">
-              1 cây = 20 ngày tưới cây kiên trì + 4 lần ra hoa + 1 vụ thu hoạch. Bạn đang xây dựng một hệ sinh thái thành công!
+              1 cây = 140 lần tưới kiên trì (7 tưới = 1 hoa, 4 hoa = 1 quả, 5 quả = 1 cây). Hãy tiếp tục xây dựng hệ sinh thái của bạn!
             </p>
           </div>
         </section>

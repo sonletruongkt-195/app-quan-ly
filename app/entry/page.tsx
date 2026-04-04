@@ -5,6 +5,7 @@ import { useAuth } from '@/components/AuthProvider';
 import BottomNav from '@/components/BottomNav';
 import { submitDailyEntry, updateUserProfile, saveDailyEntry } from '@/lib/database';
 import { isRevenueTargetLocked, getTodayStr, getCurrentMonth, calculateDayScore } from '@/lib/gameLogic';
+import { playSuccess } from '@/lib/audio';
 
 export default function EntryPage() {
   const { user, profile, todayEntry, loading, refreshProfile, refreshTodayEntry } = useAuth();
@@ -133,6 +134,7 @@ export default function EntryPage() {
 
       await refreshProfile();
       await refreshTodayEntry();
+      playSuccess();
       showToast('✅ Đã cập nhật kết quả hôm nay!');
     } catch (e: any) {
       showToast('Lỗi ghi nhận: ' + e.message);
@@ -376,7 +378,7 @@ export default function EntryPage() {
               <h3 className="text-[10px] font-black uppercase tracking-widest text-on-surface/70 mb-1">Trạng thái hiện tại</h3>
               <p className="text-xs font-black text-on-surface-variant">
                 Score: <span className={currentStatus?.totalDayScore! > 5 ? 'text-primary' : 'text-error'}>{currentStatus?.totalDayScore.toFixed(1)}đ</span> • 
-                Goals: <span className={(currentStatus?.taskPercent! + (revenuePercent || 0)) > 100 ? 'text-primary' : 'text-error'}>{Math.round(currentStatus?.taskPercent! + (revenuePercent || 0))}%</span>
+              Goals: <span className={currentStatus?.goalPercent! >= 50 ? 'text-primary' : 'text-error'}>{Math.round(currentStatus?.goalPercent || 0)}%</span>
               </p>
             </div>
             <div className={`px-4 py-2 rounded-2xl font-black text-xs shadow-sm ${currentStatus?.isWin ? 'bg-primary text-on-primary' : 'bg-error text-on-error'}`}>
