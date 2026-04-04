@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+@layer base {
+  body {
+    @apply bg-surface text-on-background font-body selection:bg-primary-fixed antialiased;
+    min-height: max(100vh, 100dvh);
+    background: #f2f4f6; /* Outer background to show mobile constraints on desktop */
+  }
+
+  /* Force container strictly in mobile view (like Stitch preview) */
+  body.mobile-container {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #f8faf8; /* Use hardcoded color or var for surface */
+    position: relative;
+    overflow-x: hidden;
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.bg-radial-gradient {
+  background-image: radial-gradient(var(--tw-gradient-stops));
+}
