@@ -205,7 +205,8 @@ export function calculateDayScore(
   revenueTotal: number,
   revenueTarget: number,
   currentWinStreak: number,
-  challengeBonus: number = 0
+  challengeBonus: number = 0,
+  challengeId?: number
 ): DayScoreResult {
   const wateringPts = wateredToday ? 1 : -2;
 
@@ -217,7 +218,18 @@ export function calculateDayScore(
   const taskPts = rawTaskPts * streakMultiplier;
   const revenuePts = rawRevenuePts * streakMultiplier;
 
-  const totalDayScore = wateringPts + taskPts + revenuePts + challengeBonus;
+  // 🎯 Calculate earned challenge bonus
+  let earnedChallengeBonus = 0;
+  if (challengeId && challengeBonus > 0) {
+    const normalMet = normalTasksTotal > 0 && normalTasksDone >= normalTasksTotal;
+    const hardMet = hardTasksTotal > 0 && hardTasksDone >= hardTasksTotal;
+
+    if (challengeId === 1 && normalMet) earnedChallengeBonus = challengeBonus;
+    else if (challengeId === 2 && hardMet) earnedChallengeBonus = challengeBonus;
+    else if (challengeId === 3 && normalMet && hardMet) earnedChallengeBonus = challengeBonus;
+  }
+
+  const totalDayScore = wateringPts + taskPts + revenuePts + earnedChallengeBonus;
 
   const tasksDone = normalTasksDone + hardTasksDone;
   const totalTasks = (normalTasksTotal || 0) + (hardTasksTotal || 0);
@@ -225,7 +237,7 @@ export function calculateDayScore(
   const revenuePercent = revenueTarget > 0 ? (revenueTotal / revenueTarget) * 100 : 0;
 
   const goalPercent = (taskPercent + revenuePercent) / 2;
-  const isWin = totalDayScore >= WIN_SCORE_THRESHOLD && goalPercent >= 50; // If average is 50%, it's like original sum was 100%
+  const isWin = totalDayScore >= WIN_SCORE_THRESHOLD && goalPercent >= 50;
 
   return {
     wateringPts,

@@ -327,7 +327,8 @@ export async function submitDailyEntry(
     revenueTotal,
     entry.revenueTarget,
     baseStreak,
-    todayEntry?.challengeBonus || 0
+    todayEntry?.challengeBonus || 0,
+    todayEntry?.challengeId || 0
   );
 
   const dayScore = { taskPercent, revenuePercent, totalDayScore, isWin, ...scores };

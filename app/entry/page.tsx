@@ -76,7 +76,8 @@ export default function EntryPage() {
       revenueTotal,
       currentTarget,
       profile.currentWinStreak,
-      todayEntry?.challengeBonus || 0
+      todayEntry?.challengeBonus || 0,
+      todayEntry?.challengeId || 0
     );
   }, [profile, todayEntry, normalDone, normalTotal, hardDone, hardTotal, revenueTotal, currentTarget]);
 
