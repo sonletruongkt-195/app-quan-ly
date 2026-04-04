@@ -213,11 +213,29 @@ export default function StatsPage() {
 
         {/* 30-day Revenue Line Chart */}
         <section className="bg-surface-container-lowest p-6 rounded-[28px] shadow-sm border border-on-surface/5">
-          <h3 className="text-[9px] font-label font-black text-on-surface-variant uppercase tracking-[0.2em] mb-6 px-0.5">Doanh thu thực tế (30 ngày)</h3>
+          <div className="flex justify-between items-start mb-6 px-0.5">
+            <div>
+              <h3 className="text-[9px] font-label font-black text-on-surface-variant uppercase tracking-[0.2em] mb-1">Doanh thu thực tế (30 ngày)</h3>
+              <h4 className="text-xl font-headline font-black text-on-surface tracking-tight">Xu hướng lợi nhuận</h4>
+            </div>
+            <div className="text-right">
+              {(() => {
+                const last30Days = getLastNDays(30);
+                const first15Val = last30Days.slice(0, 15).reduce((sum, d) => sum + (entryMap[d]?.revenueTotal || 0), 0);
+                const last15Val = last30Days.slice(15).reduce((sum, d) => sum + (entryMap[d]?.revenueTotal || 0), 0);
+                const diff = first15Val > 0 ? ((last15Val - first15Val) / first15Val) * 100 : 0;
+                
+                return (
+                  <div className={`px-2 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${diff >= 0 ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-error/10 border-error/20 text-error'}`}>
+                    {diff >= 0 ? '↑' : '↓'} {Math.abs(Math.round(diff))}%
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
           
-          <div className="overflow-x-auto pb-4 -mx-1 scrollbar-hide">
-            <div className="min-w-[800px] h-40 relative">
-              <svg viewBox={`0 0 800 160`} className="w-full h-full" preserveAspectRatio="none">
+          <div className="h-44 w-full relative">
+            <svg viewBox={`0 0 400 160`} className="w-full h-full" preserveAspectRatio="none">
                 {/* Area Gradient */}
                 <defs>
                   <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
@@ -231,34 +249,25 @@ export default function StatsPage() {
                   const points = last30.map((date, i) => {
                     const e = entryMap[date];
                     const val = e?.submitted ? e.revenueTotal : 0;
-                    const x = (i / 29) * 800;
+                    const x = (i / 29) * 400; // viewBox width 400
                     const y = 160 - (val / maxRevenue30) * 140 - 10;
                     return { x, y };
                   });
                   
                   const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-                  const areaD = `${d} L 800 160 L 0 160 Z`;
+                  const areaD = `${d} L 400 160 L 0 160 Z`;
 
                   return (
                     <>
                       <path d={areaD} fill="url(#lineGradient)" />
                       <path d={d} fill="none" stroke="var(--md-sys-color-primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                      {points.map((p, i) => (
-                        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--md-sys-color-surface-container-lowest)" stroke="var(--md-sys-color-primary)" strokeWidth="2" />
-                      ))}
+                      {/* Only last point highlight */}
+                      <circle cx={points[29].x} cy={points[29].y} r="5" fill="var(--color-primary)" className="animate-pulse" />
                     </>
                   );
                 })()}
               </svg>
-              
-              {/* Date Labels */}
-              <div className="flex justify-between mt-2 px-2 text-[8px] font-black text-on-surface-variant/40">
-                {last30.filter((_, i) => i % 5 === 0 || i === 29).map((date, i) => (
-                  <span key={i}>{date.slice(8, 10)}/{date.slice(5, 7)}</span>
-                ))}
-              </div>
             </div>
-          </div>
         </section>
 
 
@@ -266,8 +275,7 @@ export default function StatsPage() {
         <section className="bg-surface-container-lowest p-6 rounded-[28px] shadow-sm border border-on-surface/5">
           <h3 className="text-[9px] font-label font-black text-on-surface-variant uppercase tracking-[0.2em] mb-6 px-0.5">Tổng số task hoàn thành (30 ngày)</h3>
           
-          <div className="overflow-x-auto pb-4 -mx-1 scrollbar-hide">
-            <div className="min-w-[900px] h-48 flex items-end gap-1.5 px-2">
+          <div className="flex items-end justify-between h-48 px-1 gap-[2px] w-full">
               {last30.map((date) => {
                 const e = entryMap[date];
                 const done = e?.submitted ? (e.normalTasksDone + e.hardTasksDone) : 0;
@@ -278,8 +286,8 @@ export default function StatsPage() {
                 const remHeight = total > 0 ? (remaining / 10) * 100 : 0;
 
                 return (
-                  <div key={date} className="flex-1 flex flex-col items-center gap-2 group">
-                    <div className="w-full h-32 flex flex-col justify-end bg-surface-container-highest/20 rounded-full overflow-hidden border border-on-surface/5">
+                  <div key={date} className="flex-1 flex flex-col items-center gap-1 group relative h-full justify-end">
+                    <div className="w-full relative flex flex-col-reverse items-center h-full max-w-[4px] bg-surface-container-highest/20 rounded-full overflow-hidden border border-on-surface/5">
                       {/* Remainder Segment */}
                       <div 
                         className="w-full bg-on-surface/10 transition-all duration-700" 
@@ -293,13 +301,9 @@ export default function StatsPage() {
                         <div className="absolute inset-0 bg-white/10 animate-shine"></div>
                       </div>
                     </div>
-                    <span className="text-[7px] font-black text-on-surface-variant/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {date.slice(8, 10)}
-                    </span>
                   </div>
                 );
               })}
-            </div>
           </div>
           
           <div className="mt-4 flex gap-4 px-1">
