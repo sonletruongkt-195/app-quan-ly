@@ -863,17 +863,17 @@ export default function DashboardPage() {
 
       {/* Contextual FAB */}
       {beforeNoon && (
-        <div className="max-w-md mx-auto flex justify-center pb-8 animate-in slide-in-from-bottom duration-700">
+        <div className="fixed bottom-32 left-0 w-full flex justify-center px-6 z-40 pointer-events-none">
           <button
             onClick={plantStage === 'dead' ? handleRevive : handleWater}
             disabled={(plantStage !== 'dead' && (wateredToday || watering)) || (plantStage === 'dead' && !canRevivePlant(profile!))}
-            className={`h-16 px-8 rounded-2xl flex items-center gap-3 transition-all relative overflow-hidden group/btn ${
+            className={`pointer-events-auto h-16 px-8 rounded-2xl flex items-center gap-3 transition-all relative overflow-hidden group/btn shadow-[0_12px_32px_rgba(0,0,0,0.15)] ${
               wateredToday ? 'bg-primary/20 text-primary-on-container border border-primary/20 opacity-80 cursor-default shadow-none' : 
               plantStage === 'dead' ? 
                 (canRevivePlant(profile!) 
-                  ? 'bg-purple-600 text-white shadow-lg active:scale-95 hover:bg-purple-700 hover:shadow-xl hover:-translate-y-0.5' 
-                  : 'bg-surface-container-highest text-on-surface/40 border border-on-surface/10 opacity-80 cursor-default') : 
-              'bg-primary text-white shadow-lg active:scale-95 active:shadow-md hover:shadow-xl hover:-translate-y-0.5'
+                  ? 'bg-purple-600 text-white active:scale-95 hover:bg-purple-700 hover:shadow-xl hover:-translate-y-0.5' 
+                  : 'bg-surface-container-highest text-on-surface/40 border border-on-surface/10 opacity-80 cursor-default shadow-none') : 
+              'bg-primary text-white active:scale-95 active:shadow-md hover:shadow-xl hover:-translate-y-0.5'
             }`}
           >
             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500"></div>
@@ -882,12 +882,12 @@ export default function DashboardPage() {
               <span className={`material-symbols-outlined text-2xl ${watering ? 'animate-bounce' : ''}`}>
                 {watering ? 'waves' : plantStage === 'dead' ? 'heart_plus' : wateredToday ? 'check_circle' : 'water_drop'}
               </span>
-              <div className="flex flex-col items-start leading-none">
+              <div className="flex flex-col items-start leading-none text-left">
                 <span className="tracking-tight uppercase text-[10px] font-black opacity-70 mb-0.5">
                   {watering ? 'ĐANG TƯỚI...' : wateredToday ? 'ĐÃ TƯỚI XONG' : plantStage === 'dead' ? (canRevivePlant(profile!) ? 'HỒI SINH (10₫)' : 'KHÔNG ĐỦ ĐIỂM') : `HẠN ĐẾN 12:00 (${timeLeft})`}
                 </span>
-                <span className="text-sm font-black tracking-wide">
-                  {watering ? 'Đang cấp nước...' : wateredToday ? 'Tốt lắm!' : plantStage === 'dead' ? (canRevivePlant(profile!) ? 'CỨU CÂY NGAY' : 'CÂY ĐÃ CHẾT') : 'TƯỚI CÂY NGAY'}
+                <span className="text-sm font-black tracking-wide uppercase">
+                  {watering ? 'Processing...' : wateredToday ? 'Sức khỏe +1' : plantStage === 'dead' ? (canRevivePlant(profile!) ? 'CỨU CÂY NGAY' : 'CÂY ĐÃ CHẾT') : 'TƯỚI CÂY NGAY'}
                 </span>
               </div>
             </div>
