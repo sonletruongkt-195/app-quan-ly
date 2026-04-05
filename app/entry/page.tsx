@@ -6,6 +6,7 @@ import BottomNav from '@/components/BottomNav';
 import { submitDailyEntry, updateUserProfile, saveDailyEntry } from '@/lib/database';
 import { isRevenueTargetLocked, getTodayStr, getCurrentMonth, calculateDayScore } from '@/lib/gameLogic';
 import { playSuccess } from '@/lib/audio';
+import { isBeforeNoon } from '@/lib/timeUtils';
 
 export default function EntryPage() {
   const { user, profile, todayEntry, loading, refreshProfile, refreshTodayEntry } = useAuth();
@@ -220,37 +221,47 @@ export default function EntryPage() {
           )}
 
           {!isGoalsLocked ? (
-            <div className="space-y-4 p-2 bg-surface-container/30 rounded-2xl border border-dashed border-on-surface/10">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[9px] font-black text-on-surface-variant/70 uppercase block mb-1">Số Task Nâng cao (+1)</label>
-                  <input 
-                    type="number" 
-                    value={normalInput}
-                    onChange={e => setNormalInput(e.target.value)}
-                    placeholder="VD: 5"
-                    className="w-full bg-surface p-3 rounded-xl border border-on-surface/10 text-sm font-black focus:border-primary outline-none"
-                  />
+            isBeforeNoon() ? (
+              <div className="space-y-4 p-2 bg-surface-container/30 rounded-2xl border border-dashed border-on-surface/10">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[9px] font-black text-on-surface-variant/70 uppercase block mb-1">Số Task Nâng cao (+1)</label>
+                    <input 
+                      type="number" 
+                      value={normalInput}
+                      onChange={e => setNormalInput(e.target.value)}
+                      placeholder="VD: 5"
+                      className="w-full bg-surface p-3 rounded-xl border border-on-surface/10 text-sm font-black focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black text-on-surface-variant/70 uppercase block mb-1">Cột mốc (+2)</label>
+                    <input 
+                      type="number" 
+                      value={hardInput}
+                      onChange={e => setHardInput(e.target.value)}
+                      placeholder="VD: 2"
+                      className="w-full bg-surface p-3 rounded-xl border border-on-surface/10 text-sm font-black focus:border-error outline-none"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[9px] font-black text-on-surface-variant/70 uppercase block mb-1">Cột mốc (+2)</label>
-                  <input 
-                    type="number" 
-                    value={hardInput}
-                    onChange={e => setHardInput(e.target.value)}
-                    placeholder="VD: 2"
-                    className="w-full bg-surface p-3 rounded-xl border border-on-surface/10 text-sm font-black focus:border-error outline-none"
-                  />
-                </div>
+                <button 
+                  onClick={handleSetGoals}
+                  disabled={submitting}
+                  className="w-full py-3 bg-primary text-on-primary rounded-xl font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  {submitting ? <span className="material-symbols-outlined animate-spin text-sm">sync</span> : 'LÀM VIỆC THÔI! 🚀'}
+                </button>
               </div>
-              <button 
-                onClick={handleSetGoals}
-                disabled={submitting}
-                className="w-full py-3 bg-primary text-on-primary rounded-xl font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                {submitting ? <span className="material-symbols-outlined animate-spin text-sm">sync</span> : 'LÀM VIỆC THÔI! 🚀'}
-              </button>
-            </div>
+            ) : (
+              <div className="p-6 bg-orange-500/10 rounded-2xl border border-dashed border-orange-500/30 flex flex-col items-center text-center gap-2">
+                <span className="material-symbols-outlined text-orange-500 text-3xl font-black">timer_off</span>
+                <p className="text-xs font-black text-orange-600 uppercase tracking-tight">Hạn chót 12:00 đã qua</p>
+                <p className="text-[10px] font-medium text-on-surface-variant leading-tight px-4">
+                  Bạn đã lỡ thời gian thiết lập mục tiêu cho hôm nay. Hệ thống đã khóa ghi nhận task. Hãy quay lại vào ngày mai nhé!
+                </p>
+              </div>
+            )
           ) : (
             <div className="space-y-6">
               {/* Normal Tasks Grid */}

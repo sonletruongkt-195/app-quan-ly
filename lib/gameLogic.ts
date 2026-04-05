@@ -325,6 +325,9 @@ export function revivePlant(profile: UserProfile): Partial<UserProfile> {
   return {
     isPlantDead: false,
     plantAccumulatedPoints: 0,
+    flowers: 0,
+    fruits: 0,
+    currentWinStreak: 0,
     totalGamePoints: profile.totalGamePoints - LIFE_SAVER_COST,
     consecutiveMissedDays: 0,
   };

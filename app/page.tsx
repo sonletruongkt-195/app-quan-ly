@@ -15,6 +15,8 @@ import { DailyEntry } from '@/lib/types';
 import { playWatering, toggleZenBgm, playSuccess } from '@/lib/audio';
 import { usePathname } from 'next/navigation';
 import DailyChallengeModal from '@/components/DailyChallengeModal';
+import { isBeforeNoon, getTimeRemainingUntilNoon } from '@/lib/timeUtils';
+import ReminderBanner from '@/components/ReminderBanner';
 
 // Premium Glassmorphism Gauge
 function CircularGauge({ percent, color, label, subLabel }: { percent: number; color: string; label: string; subLabel: string }) {
@@ -70,8 +72,13 @@ export default function DashboardPage() {
   const router = useRouter();
   const [entries, setEntries] = useState<DailyEntry[]>([]);
   const [watering, setWatering] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [evoMsg, setEvoMsg] = useState<string | null>(null);
+  const [showBanner, setShowBanner] = useState(false);
+  const [timeLeft, setTimeLeft] = useState('');
+  const [beforeNoon, setBeforeNoon] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
   const [monthEntries, setMonthEntries] = useState<DailyEntry[]>([]);
   const [zenMode, setZenMode] = useState(false);
@@ -128,6 +135,35 @@ export default function DashboardPage() {
     }
   }, [user, viewDate]);
 
+  // Logic for Noon Deadline & Banner
+  useEffect(() => {
+    const goalsNotSet = todayEntry && todayEntry.normalTasksTotal === 0 && todayEntry.hardTasksTotal === 0;
+    
+    if (profile?.isPlantDead) {
+      setShowBanner(true);
+      return;
+    }
+
+    if (goalsNotSet) {
+      const timer = setTimeout(() => {
+        setShowBanner(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [todayEntry, profile?.isPlantDead]);
+
+  useEffect(() => {
+    setMounted(true);
+    setTimeLeft(getTimeRemainingUntilNoon());
+    setBeforeNoon(isBeforeNoon());
+
+    const interval = setInterval(() => {
+      setTimeLeft(getTimeRemainingUntilNoon());
+      setBeforeNoon(isBeforeNoon());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
@@ -156,6 +192,24 @@ export default function DashboardPage() {
       showToast(e.message);
     } finally {
       setWatering(false);
+    }
+  };
+
+  const handleRevive = async () => {
+    if (!user || !profile || !canRevivePlant(profile)) return;
+
+    if (!window.confirm("Bạn có chắc chắn muốn dùng 10 điểm để hồi sinh cây không? (Chuỗi thắng và Hoa/Quả sẽ bị xóa)")) {
+      return;
+    }
+
+    try {
+      const updates = revivePlant(profile);
+      await updateUserProfile(user.id, updates);
+      await refreshProfile();
+      playSuccess();
+      showToast('✨ Cây đã được hồi sinh từ mầm non!');
+    } catch (e: any) {
+      showToast(e.message);
     }
   };
 
@@ -255,6 +309,15 @@ export default function DashboardPage() {
           {/* Points display removed per user request */}
         </div>
       </header>
+
+      <ReminderBanner 
+        isVisible={showBanner && mounted} 
+        onClose={() => setShowBanner(false)} 
+        message={profile?.isPlantDead 
+          ? "💀 Cây của bạn đã héo úa! Hãy dùng 10 điểm để hồi sinh và bắt đầu lại." 
+          : `🌱 Đã đến lúc lên kế hoạch! Đặt mục tiêu ngay trước 12:00 (còn ${timeLeft}) để không lỡ ngày hôm nay.`
+        }
+      />
 
       {/* Daily Challenge Modal */}
       <DailyChallengeModal 
@@ -799,19 +862,38 @@ export default function DashboardPage() {
       </main>
 
       {/* Contextual FAB */}
-      <div className="fixed bottom-28 left-0 w-full flex justify-center px-6 z-40 pointer-events-none">
-        <button 
-          onClick={handleWater}
-          disabled={wateredToday || watering || plantStage === 'dead'}
-          className={`pointer-events-auto flex items-center gap-3 px-8 py-4 rounded-full font-headline font-extrabold shadow-[0_12px_32px_rgba(25,28,27,0.15)] active:scale-95 transition-all duration-300
-            ${wateredToday ? 'bg-secondary-container text-on-secondary-container opacity-80' : plantStage === 'dead' ? 'bg-surface-container-highest text-on-surface-variant opacity-60' : 'bg-primary text-on-primary'}
-          `}>
-          <span className={`material-symbols-outlined text-2xl ${wateredToday ? 'fill-1' : ''}`}>water_drop</span>
-          <span className="tracking-tight uppercase text-sm">
-            {watering ? 'ĐANG TƯỚI...' : wateredToday ? 'ĐÃ TƯỚI' : plantStage === 'dead' ? 'CÂY ĐÃ CHẾT' : 'TƯỚI CÂY'}
-          </span>
-        </button>
-      </div>
+      {beforeNoon && (
+        <div className="max-w-md mx-auto flex justify-center pb-8 animate-in slide-in-from-bottom duration-700">
+          <button
+            onClick={plantStage === 'dead' ? handleRevive : handleWater}
+            disabled={(plantStage !== 'dead' && (wateredToday || watering)) || (plantStage === 'dead' && !canRevivePlant(profile!))}
+            className={`h-16 px-8 rounded-2xl flex items-center gap-3 transition-all relative overflow-hidden group/btn ${
+              wateredToday ? 'bg-primary/20 text-primary-on-container border border-primary/20 opacity-80 cursor-default shadow-none' : 
+              plantStage === 'dead' ? 
+                (canRevivePlant(profile!) 
+                  ? 'bg-purple-600 text-white shadow-lg active:scale-95 hover:bg-purple-700 hover:shadow-xl hover:-translate-y-0.5' 
+                  : 'bg-surface-container-highest text-on-surface/40 border border-on-surface/10 opacity-80 cursor-default') : 
+              'bg-primary text-white shadow-lg active:scale-95 active:shadow-md hover:shadow-xl hover:-translate-y-0.5'
+            }`}
+          >
+            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500"></div>
+            
+            <div className="relative flex items-center gap-3">
+              <span className={`material-symbols-outlined text-2xl ${watering ? 'animate-bounce' : ''}`}>
+                {watering ? 'waves' : plantStage === 'dead' ? 'heart_plus' : wateredToday ? 'check_circle' : 'water_drop'}
+              </span>
+              <div className="flex flex-col items-start leading-none">
+                <span className="tracking-tight uppercase text-[10px] font-black opacity-70 mb-0.5">
+                  {watering ? 'ĐANG TƯỚI...' : wateredToday ? 'ĐÃ TƯỚI XONG' : plantStage === 'dead' ? (canRevivePlant(profile!) ? 'HỒI SINH (10₫)' : 'KHÔNG ĐỦ ĐIỂM') : `HẠN ĐẾN 12:00 (${timeLeft})`}
+                </span>
+                <span className="text-sm font-black tracking-wide">
+                  {watering ? 'Đang cấp nước...' : wateredToday ? 'Tốt lắm!' : plantStage === 'dead' ? (canRevivePlant(profile!) ? 'CỨU CÂY NGAY' : 'CÂY ĐÃ CHẾT') : 'TƯỚI CÂY NGAY'}
+                </span>
+              </div>
+            </div>
+          </button>
+        </div>
+      )}
 
       <BottomNav active="/" />
     </div>
